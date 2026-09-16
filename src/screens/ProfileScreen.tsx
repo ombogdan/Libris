@@ -5,15 +5,21 @@ import { TabParamList } from '../navigation/types';
 import { common, ScreenTitle } from '../components/ui';
 import { useAppStore } from '../store/AppStore';
 import { colors as c } from '../theme';
+import { useAuth } from '../auth/AuthProvider';
+import { signOutFromGoogle } from '../services/auth';
 export function ProfileScreen({
   navigation,
 }: BottomTabScreenProps<TabParamList, 'Profile'>) {
   const x = useAppStore();
+  const { session, profile } = useAuth();
+  const name = profile?.display_name || x.user;
+  const city = profile?.city || x.city;
+  const contact = profile?.phone || x.contact;
   const rows = [
     ['Мої оголошення', String(x.ads.length)],
     ['Обране', String(x.favs.length)],
-    ['Місто', x.city],
-    ['Спосіб зв’язку', x.contact || 'Не вказано'],
+    ['Місто', city],
+    ['Спосіб зв’язку', contact || 'Не вказано'],
     ['Відгуки', '4,9 ★'],
   ];
   return (
@@ -21,10 +27,10 @@ export function ProfileScreen({
       <ScreenTitle>Профіль</ScreenTitle>
       <View style={s.top}>
         <View style={s.avatar}>
-          <Text style={s.initial}>{x.user[0] || 'О'}</Text>
+          <Text style={s.initial}>{name[0] || 'О'}</Text>
         </View>
-        <Text style={s.title}>{x.user || 'Оксана'}</Text>
-        <Text style={common.meta}>★ 4,9 · {x.city || 'Полтава'} · з 2026</Text>
+        <Text style={s.title}>{name || 'Оксана'}</Text>
+        <Text style={common.meta}>★ 4,9 · {city || 'Полтава'} · з 2026</Text>
       </View>
       <View style={s.metrics}>
         {[
@@ -48,15 +54,20 @@ export function ProfileScreen({
           <Text style={common.meta}>{v} ›</Text>
         </Pressable>
       ))}
-      <Pressable
-        onPress={() =>
-          navigation
-            .getParent()
-            ?.reset({ index: 0, routes: [{ name: 'Welcome' }] })
-        }
-      >
-        <Text style={s.logout}>Вийти з акаунта</Text>
-      </Pressable>
+      {session ? (
+        <Pressable onPress={signOutFromGoogle}>
+          <Text style={s.logout}>Вийти з акаунта</Text>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() =>
+            navigation
+              .getParent()
+              ?.reset({ index: 0, routes: [{ name: 'Welcome' }] })
+          }>
+          <Text style={s.logout}>Увійти або створити акаунт</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }

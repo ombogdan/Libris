@@ -3,6 +3,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 export type RootStackParamList = {
   Welcome: undefined;
   Signup: undefined;
+  CompleteProfile: undefined;
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Book: { bookId: string };
   Thread: { chatId: string };

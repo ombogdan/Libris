@@ -13,4 +13,5 @@ function required(name: 'SUPABASE_URL' | 'SUPABASE_PUBLISHABLE_KEY'): string {
 export const env = {
   supabaseUrl: required('SUPABASE_URL'),
   supabasePublishableKey: required('SUPABASE_PUBLISHABLE_KEY'),
+  googleWebClientId: Config.GOOGLE_WEB_CLIENT_ID?.trim() ?? '',
 } as const;

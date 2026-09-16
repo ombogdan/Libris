@@ -15,17 +15,21 @@ export function Button({
   label,
   onPress,
   secondary = false,
+  disabled = false,
 }: {
   label: string;
   onPress: () => void;
   secondary?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         s.button,
         secondary && s.secondary,
+        disabled && s.disabled,
         pressed && { opacity: 0.7 },
       ]}
     >
@@ -189,6 +193,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: c.divider,
   },
+  disabled: { opacity: 0.5 },
   buttonText: { fontSize: 15, fontWeight: '800', color: c.bg },
   chip: {
     minHeight: 40,

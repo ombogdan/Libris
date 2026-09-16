@@ -5,10 +5,12 @@ import { TabParamList } from '../navigation/types';
 import { BookRow, Chip, common, Empty, ScreenTitle } from '../components/ui';
 import { useAppStore } from '../store/AppStore';
 import { colors as c } from '../theme';
+import { useAuth } from '../auth/AuthProvider';
 export function FeedScreen({
   navigation,
 }: BottomTabScreenProps<TabParamList, 'Feed'>) {
   const x = useAppStore();
+  const { profile } = useAuth();
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState('Усі');
   const list = useMemo(
@@ -26,7 +28,9 @@ export function FeedScreen({
   );
   return (
     <ScrollView contentContainerStyle={common.page}>
-      <ScreenTitle right={<Chip label={x.city} />}>Що поруч</ScreenTitle>
+      <ScreenTitle right={<Chip label={profile?.city || x.city} />}>
+        Що поруч
+      </ScreenTitle>
       <TextInput
         style={s.search}
         value={query}

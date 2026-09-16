@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +15,8 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { BookScreen } from '../screens/BookScreen';
 import { ThreadScreen } from '../screens/ThreadScreen';
 import { MyListingsScreen } from '../screens/MyListingsScreen';
+import { CompleteProfileScreen } from '../screens/CompleteProfileScreen';
+import { useAuth } from '../auth/AuthProvider';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../localization/i18n';
@@ -95,8 +97,21 @@ function Tabs() {
 }
 const styles = StyleSheet.create({
   tabItem: { height: 64, borderRadius: 18, paddingTop: 7, paddingBottom: 6 },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
 export function RootNavigator() {
+  const { session, profile, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={c.accent} />
+      </View>
+    );
+  }
+
+  const needsProfile = Boolean(session && !profile?.onboarding_completed);
+
   return (
     <NavigationContainer
       theme={{
@@ -112,18 +127,37 @@ export function RootNavigator() {
       }}
     >
       <Stack.Navigator
-        initialRouteName="Welcome"
+        key={needsProfile ? 'profile' : session ? 'signed-in' : 'signed-out'}
+        initialRouteName={
+          needsProfile ? 'CompleteProfile' : session ? 'Tabs' : 'Welcome'
+        }
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: c.bg },
         }}
       >
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="Tabs" component={Tabs} />
-        <Stack.Screen name="Book" component={BookScreen} />
-        <Stack.Screen name="Thread" component={ThreadScreen} />
-        <Stack.Screen name="MyListings" component={MyListingsScreen} />
+        {needsProfile ? (
+          <Stack.Screen
+            name="CompleteProfile"
+            component={CompleteProfileScreen}
+          />
+        ) : (
+          <>
+            {!session && (
+              <>
+                <Stack.Screen name="Welcome" component={WelcomeScreen} />
+                <Stack.Screen name="Signup" component={SignupScreen} />
+              </>
+            )}
+            <Stack.Screen name="Tabs" component={Tabs} />
+            <Stack.Screen name="Book" component={BookScreen} />
+            <Stack.Screen name="Thread" component={ThreadScreen} />
+            <Stack.Screen
+              name="MyListings"
+              component={MyListingsScreen}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

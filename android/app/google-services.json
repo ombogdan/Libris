@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "338376461945",
+    "project_id": "libris-ac56a",
+    "storage_bucket": "libris-ac56a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:338376461945:android:98713b826f4b14dde6cea8",
+        "android_client_info": {
+          "package_name": "com.libris"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "338376461945-mm90n26o4253locci0a553ddfurqjbol.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.libris",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "338376461945-f1ci91m4adt1hge0lncp6ha97or0p0ts.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjv62ulMfvJxcxKQ6axZyxh6V-MYA0n2g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "338376461945-di9jf28fp5i123n7ppei2uc2dsbdeust.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "338376461945-l3bp4id7ie0lovog8uel8qjt3sn3o156.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.libris"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

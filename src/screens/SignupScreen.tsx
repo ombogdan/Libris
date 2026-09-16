@@ -1,60 +1,106 @@
-import React from 'react';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { RootStackParamList } from '../navigation/types';
-import { Button, common, Field } from '../components/ui';
-import { useAppStore } from '../store/AppStore';
-import { colors as c } from '../theme';
+import React, {useState} from 'react';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import {RootStackParamList} from '../navigation/types';
+import {Button, common} from '../components/ui';
+import {colors as c} from '../theme';
+import {signInWithGoogle} from '../services/auth';
+
 export function SignupScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Signup'>) {
-  const x = useAppStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Не вдалося увійти через Google. Спробуй ще раз.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <ScrollView contentContainerStyle={common.page}>
+    <View style={s.page}>
       <Pressable onPress={navigation.goBack}>
         <Text style={common.back}>← Назад</Text>
       </Pressable>
-      <Text style={s.title}>Розкажи трохи про себе</Text>
-      <Text style={common.subtitle}>Це займе менше хвилини.</Text>
-      <Field
-        label="Як тебе звати"
-        value={x.user}
-        onChangeText={x.setUser}
-        placeholder="Оксана"
-      />
-      <Field
-        label="Місто"
-        value={x.city}
-        onChangeText={x.setCity}
-        placeholder="Полтава"
-      />
-      <Field
-        label="Телефон або email"
-        value={x.contact}
-        onChangeText={x.setContact}
-        placeholder="+380 __ ___ __ __"
-      />
-      <Text style={s.help}>
-        Реєстрація потрібна лише щоб публікувати книги й писати продавцям.
-      </Text>
+      <View style={s.content}>
+        <View style={s.logo}>
+          <Text style={s.logoText}>К</Text>
+        </View>
+        <Text style={s.title}>Створи профіль</Text>
+        <Text style={common.subtitle}>
+          Увійди через Google. Паролів, SMS та листів підтвердження не буде.
+        </Text>
+        <Pressable
+          disabled={isLoading}
+          onPress={handleGoogleSignIn}
+          style={({pressed}) => [
+            s.googleButton,
+            (pressed || isLoading) && s.pressed,
+          ]}>
+          <Ionicons name="logo-google" size={21} color={c.text} />
+          <Text style={s.googleText}>
+            {isLoading ? 'Входимо…' : 'Продовжити з Google'}
+          </Text>
+        </Pressable>
+        {error ? <Text style={s.error}>{error}</Text> : null}
+        <Text style={s.help}>
+          Після входу залишиться вказати телефон. Місто визначимо з геолокації.
+        </Text>
+      </View>
       <Button
-        label="Готово, поїхали"
-        onPress={() => {
-          navigation.replace('Tabs', { screen: 'Feed' });
-          x.notify('Вітаємо в Книгообігу!');
-        }}
+        secondary
+        label="Спершу подивлюсь"
+        onPress={() => navigation.replace('Tabs', {screen: 'Feed'})}
       />
-    </ScrollView>
+    </View>
   );
 }
+
 const s = StyleSheet.create({
-  title: {
-    fontSize: 30,
-    lineHeight: 34,
-    fontWeight: '800',
-    letterSpacing: -0.8,
-    color: c.text,
-    marginTop: 22,
+  page: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 28,
+    backgroundColor: c.bg,
   },
-  help: { fontSize: 12, lineHeight: 18, color: c.n600, marginVertical: 6 },
+  content: {flex: 1, justifyContent: 'center', gap: 16},
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: c.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {fontSize: 28, fontWeight: '800', color: c.bg},
+  title: {fontSize: 31, fontWeight: '800', color: c.text},
+  googleButton: {
+    height: 54,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: c.divider,
+    backgroundColor: c.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  pressed: {opacity: 0.55},
+  googleText: {fontSize: 15, fontWeight: '700', color: c.text},
+  help: {fontSize: 12.5, lineHeight: 19, color: c.n600},
+  error: {fontSize: 13, lineHeight: 19, color: '#A53C3C'},
 });
