@@ -5,6 +5,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { Session } from '@supabase/supabase-js';
@@ -24,62 +25,106 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
+  const [profileUserId, setProfileUserId] = useState<string>();
+  const profileRequest = useRef(0);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const sessionUserId = session?.user.id;
+  const isLoading = isSessionLoading || profileUserId !== sessionUserId;
 
   const loadProfile = useCallback(async (userId?: string) => {
+    const request = ++profileRequest.current;
+
     if (!userId) {
       setProfile(null);
       setProfileError(null);
+      setProfileUserId(undefined);
       return;
     }
 
-    const {data, error} = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (error) {
-      setProfile(null);
-      setProfileError(error.message);
-      return;
+      if (error) {
+        throw error;
+      }
+
+      if (request === profileRequest.current) {
+        setProfile(data);
+        setProfileError(null);
+      }
+    } catch (error) {
+      if (request === profileRequest.current) {
+        setProfile(null);
+        setProfileError(
+          error && typeof error === 'object' && 'message' in error
+            ? String(error.message)
+            : 'Не вдалося завантажити профіль.',
+        );
+      }
+    } finally {
+      if (request === profileRequest.current) {
+        setProfileUserId(userId);
+      }
     }
-
-    setProfile(data);
-    setProfileError(null);
   }, []);
 
   useEffect(() => {
     let mounted = true;
-
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (!mounted) {
-        return;
-      }
-
-      if (error) {
-        console.warn('Unable to restore Supabase session:', error.message);
-      }
-
-      setSession(data.session);
-      await loadProfile(data.session?.user.id);
-      setIsLoading(false);
-    });
+    let authEventReceived = false;
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, nextSession) => {
+      (_event, nextSession) => {
+        if (!mounted) {
+          return;
+        }
+
+        // Supabase awaits this callback; query the profile in a separate effect.
+        authEventReceived = true;
         setSession(nextSession);
-        await loadProfile(nextSession?.user.id);
-        setIsLoading(false);
+        setIsSessionLoading(false);
       },
     );
+
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!mounted || authEventReceived) {
+          return;
+        }
+
+        if (error) {
+          console.warn('Unable to restore Supabase session:', error.message);
+        }
+
+        setSession(data.session);
+        setIsSessionLoading(false);
+      })
+      .catch((error: unknown) => {
+        if (mounted && !authEventReceived) {
+          console.warn('Unable to restore Supabase session:', error);
+          setIsSessionLoading(false);
+        }
+      });
 
     return () => {
       mounted = false;
       listener.subscription.unsubscribe();
     };
-  }, [loadProfile]);
+  }, []);
+
+  useEffect(() => {
+    loadProfile(sessionUserId);
+
+    return () => {
+      // Ignore a response after sign-out, an account switch, or unmount.
+      profileRequest.current += 1;
+    };
+  }, [loadProfile, sessionUserId]);
 
   const refreshProfile = useCallback(
     async () => loadProfile(session?.user.id),
@@ -87,7 +132,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const value = useMemo(
-    () => ({session, profile, isLoading, profileError, refreshProfile}),
+    () => ({ session, profile, isLoading, profileError, refreshProfile }),
     [session, profile, isLoading, profileError, refreshProfile],
   );
 

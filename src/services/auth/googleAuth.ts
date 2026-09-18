@@ -2,7 +2,6 @@ import {
   GoogleSignin,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
-
 import {env} from '../../config/env';
 import {supabase} from '../supabase';
 

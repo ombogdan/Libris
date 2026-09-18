@@ -1,27 +1,33 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { RootStackParamList, TabParamList } from './types';
-import { colors as c } from '../theme';
-import { WelcomeScreen } from '../screens/WelcomeScreen';
-import { SignupScreen } from '../screens/SignupScreen';
-import { FeedScreen } from '../screens/FeedScreen';
-import { FavoritesScreen } from '../screens/FavoritesScreen';
-import { AddBookScreen } from '../screens/AddBookScreen';
-import { ChatsScreen } from '../screens/ChatsScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
-import { BookScreen } from '../screens/BookScreen';
-import { ThreadScreen } from '../screens/ThreadScreen';
-import { MyListingsScreen } from '../screens/MyListingsScreen';
-import { CompleteProfileScreen } from '../screens/CompleteProfileScreen';
-import { useAuth } from '../auth/AuthProvider';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useAuth } from '../auth/AuthProvider';
 import { t } from '../localization/i18n';
+import {
+  AddBookScreen,
+  BookScreen,
+  ChatsScreen,
+  CompleteProfileScreen,
+  FavoritesScreen,
+  FeedScreen,
+  MyListingsScreen,
+  ProfileScreen,
+  SignupScreen,
+  ThreadScreen,
+  WelcomeScreen,
+} from '../screens';
+import { useTheme } from '../theme';
+import { useStyles } from './RootNavigator.styles';
+import type { RootStackParamList, TabParamList } from './types';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
+
 const iconNames: { [K in keyof TabParamList]: [string, string] } = {
   Feed: ['home-outline', 'home'],
   Favorites: ['heart-outline', 'heart'],
@@ -29,8 +35,44 @@ const iconNames: { [K in keyof TabParamList]: [string, string] } = {
   Chats: ['chatbubble-ellipses-outline', 'chatbubble-ellipses'],
   Profile: ['person-outline', 'person'],
 };
+
+type TabIconProps = {
+  focused: boolean;
+  color: string;
+};
+
+function TabIcon({
+  routeName,
+  focused,
+  color,
+}: TabIconProps & { routeName: keyof TabParamList }) {
+  const styles = useStyles();
+
+  return (
+    <Ionicons
+      name={iconNames[routeName][focused ? 1 : 0]}
+      color={color}
+      size={
+        routeName === 'Add' ? styles.iconSizes.add : styles.iconSizes.default
+      }
+    />
+  );
+}
+
+const tabIconRenderers: {
+  [K in keyof TabParamList]: (props: TabIconProps) => React.ReactNode;
+} = {
+  Feed: props => <TabIcon {...props} routeName="Feed" />,
+  Favorites: props => <TabIcon {...props} routeName="Favorites" />,
+  Add: props => <TabIcon {...props} routeName="Add" />,
+  Chats: props => <TabIcon {...props} routeName="Chats" />,
+  Profile: props => <TabIcon {...props} routeName="Profile" />,
+};
+
 function Tabs() {
   const insets = useSafeAreaInsets();
+  const styles = useStyles({ bottomInset: insets.bottom });
+  const { theme } = useTheme();
   const labels: { [K in keyof TabParamList]: string } = {
     Feed: t('tabs.feed'),
     Favorites: t('tabs.favorites'),
@@ -38,33 +80,18 @@ function Tabs() {
     Chats: t('tabs.chats'),
     Profile: t('tabs.profile'),
   };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: c.text,
-        tabBarInactiveTintColor: c.n600,
-        tabBarStyle: {
-          height: 64 + insets.bottom,
-          borderTopWidth: 0,
-          borderRadius: 28,
-          position: 'absolute',
-          left: 10,
-          right: 10,
-          bottom: 0,
-          paddingBottom: insets.bottom,
-          backgroundColor: c.surface,
-        },
+        tabBarActiveTintColor: theme.palette.text,
+        tabBarInactiveTintColor: theme.palette.neutral600,
+        tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabItem,
-        tabBarActiveBackgroundColor: c.accent100,
-        tabBarLabelStyle: { fontSize: 10.5 },
-        tabBarIcon: ({ focused, color }) => (
-          <Ionicons
-            name={iconNames[route.name][focused ? 1 : 0]}
-            color={color}
-            size={route.name === 'Add' ? 28 : 23}
-          />
-        ),
+        tabBarActiveBackgroundColor: theme.palette.accent100,
+        tabBarLabelStyle: styles.tabLabel,
+        tabBarIcon: tabIconRenderers[route.name],
       })}
     >
       <Tab.Screen
@@ -95,17 +122,16 @@ function Tabs() {
     </Tab.Navigator>
   );
 }
-const styles = StyleSheet.create({
-  tabItem: { height: 64, borderRadius: 18, paddingTop: 7, paddingBottom: 6 },
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-});
+
 export function RootNavigator() {
+  const styles = useStyles();
+  const { theme } = useTheme();
   const { session, profile, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color={c.accent} />
+        <ActivityIndicator size="large" color={theme.palette.accent} />
       </View>
     );
   }
@@ -118,11 +144,11 @@ export function RootNavigator() {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: c.bg,
-          card: c.surface,
-          text: c.text,
-          border: c.divider,
-          primary: c.accent,
+          background: theme.palette.background,
+          card: theme.palette.white,
+          text: theme.palette.text,
+          border: theme.palette.divider,
+          primary: theme.palette.accent,
         },
       }}
     >
@@ -133,7 +159,7 @@ export function RootNavigator() {
         }
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: c.bg },
+          contentStyle: styles.content,
         }}
       >
         {needsProfile ? (
@@ -152,10 +178,7 @@ export function RootNavigator() {
             <Stack.Screen name="Tabs" component={Tabs} />
             <Stack.Screen name="Book" component={BookScreen} />
             <Stack.Screen name="Thread" component={ThreadScreen} />
-            <Stack.Screen
-              name="MyListings"
-              component={MyListingsScreen}
-            />
+            <Stack.Screen name="MyListings" component={MyListingsScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -1,0 +1,42 @@
+import { StyleSheet } from 'react-native';
+import { createStyles } from '../../theme';
+
+export const useStyles = createStyles(({ theme, scale }: any) => ({
+  ...StyleSheet.create({
+    label: {
+      fontSize: scale(12),
+      fontWeight: '700',
+      color: theme.palette.neutral700,
+    },
+    input: {
+      minHeight: scale(44),
+      borderRadius: scale(999),
+      backgroundColor: theme.palette.white,
+      borderWidth: scale(1),
+      borderColor: theme.palette.divider,
+      paddingHorizontal: scale(16),
+      fontSize: scale(14),
+      color: theme.palette.text,
+    },
+    grow: { flex: 1 },
+    disabledInput: { opacity: 0.45 },
+    chips: { flexDirection: 'row', gap: scale(8) },
+    cityHeading: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    textarea: {
+      height: scale(100),
+      borderRadius: scale(16),
+      textAlignVertical: 'top',
+      paddingTop: scale(13),
+    },
+    error: {
+      fontSize: scale(13),
+      lineHeight: scale(18),
+      color: theme.palette.error,
+    },
+  }),
+  colors: { placeholder: theme.palette.neutral500 },
+}));

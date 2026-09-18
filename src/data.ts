@@ -12,6 +12,10 @@ export type Book = {
   sellerAds: string;
   tone: 'accent' | 'accent2' | 'neutral';
   about: string;
+  imageUrls?: string[];
+  sellerId?: string;
+  status?: 'active' | 'sold' | 'hidden';
+  createdAt?: string;
 };
 export const books: Book[] = [
   {
@@ -158,30 +162,5 @@ export type Ad = {
   status: string;
   stats: string;
   tone: 'accent' | 'accent2' | 'neutral';
+  imageUrls?: string[];
 };
-export const initialAds: Ad[] = [
-  {
-    id: 'm1',
-    title: 'Гаррі Поттер, том 1',
-    price: 220,
-    status: 'Активне',
-    stats: '84 перегляди · 3 звернення',
-    tone: 'accent',
-  },
-  {
-    id: 'm2',
-    title: 'Історія України, 10 клас',
-    price: 0,
-    status: 'Активне',
-    stats: '31 перегляд · 1 звернення',
-    tone: 'accent2',
-  },
-  {
-    id: 'm3',
-    title: 'Кайдашева сім’я',
-    price: 90,
-    status: 'Продано',
-    stats: 'Продано 14 серпня',
-    tone: 'neutral',
-  },
-];
