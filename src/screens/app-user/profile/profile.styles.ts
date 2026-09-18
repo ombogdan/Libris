@@ -2,40 +2,63 @@ import { StyleSheet } from 'react-native';
 
 import { createStyles } from 'shared/theme/createStyles';
 
-export const useStyles = createStyles(({ theme, scale }: any) =>
-  StyleSheet.create({
-    page: {
-      paddingHorizontal: scale(18),
-      paddingTop: scale(12),
-      paddingBottom: scale(30),
-      gap: scale(13),
-      backgroundColor: theme.palette.background,
-    },
-    top: { alignItems: 'center', gap: scale(6), paddingVertical: scale(10) },
-    avatar: {
-      width: scale(72),
-      height: scale(72),
-      borderRadius: scale(999),
-      backgroundColor: theme.palette.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    initial: {
-      fontSize: scale(28),
-      fontWeight: '800',
-      color: theme.palette.background,
-    },
-    title: {
-      fontSize: scale(23),
-      fontWeight: '800',
-      color: theme.palette.text,
-    },
-    meta: { fontSize: scale(12.5), color: theme.palette.neutral600 },
-    metrics: { flexDirection: 'row', gap: scale(8) },
-    logout: {
-      color: theme.palette.accent700,
-      fontWeight: '700',
-      paddingVertical: scale(18),
-    },
-  }),
+export const useStyles = createStyles(
+  ({ theme, scale, bottomInset = 0 }: any) =>
+    StyleSheet.create({
+      screen: {
+        flex: 1,
+        backgroundColor: theme.palette.background,
+      },
+      page: {
+        paddingHorizontal: scale(18),
+        paddingTop: scale(16),
+        paddingBottom: scale(128) + bottomInset,
+        gap: scale(16),
+      },
+      top: {
+        alignItems: 'center',
+        gap: scale(6),
+        paddingVertical: scale(6),
+      },
+      avatar: {
+        width: scale(72),
+        height: scale(72),
+        borderRadius: scale(999),
+        backgroundColor: theme.palette.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      initial: {
+        fontSize: scale(28),
+        fontWeight: '800',
+        color: theme.palette.background,
+      },
+      title: {
+        fontSize: scale(23),
+        fontWeight: '800',
+        color: theme.palette.text,
+      },
+      meta: {
+        maxWidth: '90%',
+        fontSize: scale(12.5),
+        lineHeight: scale(18),
+        textAlign: 'center',
+        color: theme.palette.neutral600,
+      },
+      metrics: {
+        flexDirection: 'row',
+        gap: scale(8),
+      },
+      rows: {
+        backgroundColor: theme.palette.white,
+        borderRadius: scale(20),
+        paddingHorizontal: scale(14),
+        overflow: 'hidden',
+      },
+      error: {
+        fontSize: scale(13),
+        lineHeight: scale(18),
+        color: theme.palette.error,
+      },
+    }),
 );

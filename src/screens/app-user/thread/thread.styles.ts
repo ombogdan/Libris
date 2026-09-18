@@ -5,25 +5,20 @@ import { createStyles } from 'shared/theme/createStyles';
 export const useStyles = createStyles(({ theme, scale }: any) => ({
   ...StyleSheet.create({
     flex: { flex: 1 },
+    screen: {
+      flex: 1,
+      backgroundColor: theme.palette.background,
+    },
     page: {
       flex: 1,
       paddingHorizontal: scale(18),
       paddingVertical: scale(12),
       backgroundColor: theme.palette.background,
     },
-    header: {
+    contact: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: scale(10),
-      paddingBottom: scale(8),
-      borderBottomWidth: scale(1),
-      borderBottomColor: theme.palette.divider,
-    },
-    back: {
-      color: theme.palette.accent700,
-      fontSize: scale(15),
-      fontWeight: '700',
-      paddingVertical: scale(8),
     },
     avatar: {
       width: scale(38),

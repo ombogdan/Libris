@@ -5,14 +5,23 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { Ad, Book, Chat, initialChats } from 'shared/data';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { supabase } from 'services/supabase';
-import type { BookListing } from 'services/supabase/database.types';
+import type {
+  BookListing,
+  ListingSellerProfile,
+} from 'services/supabase/database.types';
 import { removeBookImages, uploadBookImages } from 'services/books';
 import type { LocalBookImage } from 'services/books';
+import {
+  addFavorite,
+  getFavoriteListingIds,
+  removeFavorite,
+} from 'services/favorites';
 
 type AddForm = {
   title: string;
@@ -32,13 +41,10 @@ type Store = {
   booksError: string | null;
   reloadBooks: () => Promise<void>;
   favs: string[];
-  toggleFav: (id: string) => void;
-  user: string;
-  setUser: (v: string) => void;
-  city: string;
-  setCity: (v: string) => void;
-  contact: string;
-  setContact: (v: string) => void;
+  favoritesLoading: boolean;
+  favoritesError: string | null;
+  reloadFavorites: () => Promise<void>;
+  toggleFav: (id: string) => Promise<void>;
   ads: Ad[];
   publish: (form: AddForm) => Promise<Book>;
   chats: Chat[];
@@ -50,47 +56,175 @@ type Store = {
 
 const AppStore = createContext<Store | null>(null);
 
+function formatListingsCount(count: number) {
+  const remainder10 = count % 10;
+  const remainder100 = count % 100;
+  const word =
+    remainder10 >= 1 &&
+    remainder10 <= 4 &&
+    (remainder100 < 11 || remainder100 > 14)
+      ? 'оголошення'
+      : 'оголошень';
+
+  return `${count} ${word}`;
+}
+
 export function AppStoreProvider({ children }: PropsWithChildren) {
   const { session, profile } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(false);
   const [booksError, setBooksError] = useState<string | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
-  const [user, setUser] = useState('Оксана');
-  const [city, setCity] = useState('Полтава');
-  const [contact, setContact] = useState('');
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoritesError, setFavoritesError] = useState<string | null>(null);
   const [chats, setChats] = useState(initialChats);
   const [toast, setToast] = useState('');
-  const toggleFav = (id: string) =>
-    setFavs(v => (v.includes(id) ? v.filter(x => x !== id) : [...v, id]));
-  const toBook = useCallback((row: BookListing): Book => {
-    const tones: Book['tone'][] = ['accent', 'accent2', 'neutral'];
-    const tone = tones[row.id.charCodeAt(0) % tones.length];
+  const favsRef = useRef<string[]>([]);
+  const favoritesRequest = useRef(0);
+  const favoriteMutations = useRef(new Set<string>());
 
-    return {
-      id: row.id,
-      title: row.title,
-      author: row.author,
-      year: '',
-      price: row.price,
-      cat: row.category,
-      condition: row.condition,
-      city: row.city,
-      seller: row.seller_name,
-      rating: '—',
-      sellerAds: 'оголошення продавця',
-      tone,
-      about: row.description,
-      imageUrls: row.image_urls.length
-        ? row.image_urls
-        : row.cover_url
-        ? [row.cover_url]
-        : [],
-      sellerId: row.seller_id,
-      status: row.status,
-      createdAt: row.created_at,
-    };
+  const updateFavs = useCallback((updater: (current: string[]) => string[]) => {
+    const next = updater(favsRef.current);
+    favsRef.current = next;
+    setFavs(next);
   }, []);
+
+  const notify = useCallback((text: string) => {
+    setToast(text);
+    setTimeout(() => setToast(''), 2400);
+  }, []);
+
+  const reloadFavorites = useCallback(async () => {
+    const request = ++favoritesRequest.current;
+    const userId = session?.user.id;
+
+    if (!userId) {
+      favoriteMutations.current.clear();
+      updateFavs(() => []);
+      setFavoritesError(null);
+      setFavoritesLoading(false);
+      return;
+    }
+
+    setFavoritesLoading(true);
+    setFavoritesError(null);
+    try {
+      const ids = await getFavoriteListingIds(userId);
+      if (request === favoritesRequest.current) {
+        updateFavs(() => ids);
+      }
+    } catch (error) {
+      if (request === favoritesRequest.current) {
+        setFavoritesError(
+          error && typeof error === 'object' && 'message' in error
+            ? String(error.message)
+            : 'Не вдалося завантажити обране.',
+        );
+      }
+    } finally {
+      if (request === favoritesRequest.current) {
+        setFavoritesLoading(false);
+      }
+    }
+  }, [session?.user.id, updateFavs]);
+
+  useEffect(() => {
+    reloadFavorites();
+
+    return () => {
+      favoritesRequest.current += 1;
+    };
+  }, [reloadFavorites]);
+
+  const toggleFav = useCallback(
+    async (id: string) => {
+      const userId = session?.user.id;
+      if (!userId) {
+        notify('Увійди в акаунт, щоб зберігати обране');
+        return;
+      }
+      if (favoriteMutations.current.has(id)) {
+        return;
+      }
+
+      favoritesRequest.current += 1;
+      setFavoritesLoading(false);
+      favoriteMutations.current.add(id);
+      const wasFavorite = favsRef.current.includes(id);
+      updateFavs(current =>
+        wasFavorite
+          ? current.filter(favoriteId => favoriteId !== id)
+          : [...current, id],
+      );
+
+      try {
+        if (wasFavorite) {
+          await removeFavorite(userId, id);
+        } else {
+          await addFavorite(userId, id);
+        }
+        setFavoritesError(null);
+        void reloadFavorites();
+      } catch (error) {
+        updateFavs(current =>
+          wasFavorite
+            ? current.includes(id)
+              ? current
+              : [...current, id]
+            : current.filter(favoriteId => favoriteId !== id),
+        );
+        setFavoritesError(
+          error && typeof error === 'object' && 'message' in error
+            ? String(error.message)
+            : 'Не вдалося оновити обране.',
+        );
+        notify('Не вдалося оновити обране');
+        void reloadFavorites();
+      } finally {
+        favoriteMutations.current.delete(id);
+      }
+    },
+    [notify, reloadFavorites, session?.user.id, updateFavs],
+  );
+  const toBook = useCallback(
+    (
+      row: BookListing,
+      sellerProfile?: ListingSellerProfile,
+      visibleListingsCount = 0,
+    ): Book => {
+      const tones: Book['tone'][] = ['accent', 'accent2', 'neutral'];
+      const tone = tones[row.id.charCodeAt(0) % tones.length];
+      const sellerName =
+        sellerProfile?.display_name.trim() || row.seller_name.trim();
+
+      return {
+        id: row.id,
+        title: row.title,
+        author: row.author,
+        year: '',
+        price: row.price,
+        cat: row.category,
+        condition: row.condition,
+        city: row.city,
+        seller: sellerName || 'Користувач',
+        rating: '—',
+        sellerAds: formatListingsCount(
+          sellerProfile?.listings_count ?? visibleListingsCount,
+        ),
+        tone,
+        about: row.description,
+        imageUrls: row.image_urls.length
+          ? row.image_urls
+          : row.cover_url
+          ? [row.cover_url]
+          : [],
+        sellerId: row.seller_id,
+        status: row.status,
+        createdAt: row.created_at,
+      };
+    },
+    [],
+  );
 
   const reloadBooks = useCallback(async () => {
     if (!session) {
@@ -110,7 +244,37 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     if (error) {
       setBooksError(error.message);
     } else {
-      setBooks((data ?? []).map(toBook));
+      const listings = data ?? [];
+      const sellerIds = [...new Set(listings.map(row => row.seller_id))];
+      const visibleListingsBySeller = listings.reduce<Map<string, number>>(
+        (counts, row) => {
+          counts.set(row.seller_id, (counts.get(row.seller_id) ?? 0) + 1);
+          return counts;
+        },
+        new Map(),
+      );
+      let sellerProfiles = new Map<string, ListingSellerProfile>();
+
+      if (sellerIds.length) {
+        const { data: sellers } = await supabase
+          .from('listing_seller_profiles')
+          .select('*')
+          .in('id', sellerIds);
+
+        sellerProfiles = new Map(
+          (sellers ?? []).map(seller => [seller.id, seller]),
+        );
+      }
+
+      setBooks(
+        listings.map(row =>
+          toBook(
+            row,
+            sellerProfiles.get(row.seller_id),
+            visibleListingsBySeller.get(row.seller_id) ?? 0,
+          ),
+        ),
+      );
     }
     setBooksLoading(false);
   }, [session, toBook]);
@@ -118,6 +282,29 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     reloadBooks();
   }, [reloadBooks]);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    const displayName = profile?.display_name.trim();
+
+    if (!userId || !displayName) {
+      return;
+    }
+
+    setBooks(current => {
+      let changed = false;
+      const next = current.map(book => {
+        if (book.sellerId !== userId || book.seller === displayName) {
+          return book;
+        }
+
+        changed = true;
+        return { ...book, seller: displayName };
+      });
+
+      return changed ? next : current;
+    });
+  }, [profile?.display_name, session?.user.id]);
 
   const publish = useCallback(
     async (f: AddForm) => {
@@ -238,23 +425,16 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           : chat,
       ),
     );
-  const notify = (text: string) => {
-    setToast(text);
-    setTimeout(() => setToast(''), 2400);
-  };
   const value: Store = {
     books,
     booksLoading,
     booksError,
     reloadBooks,
     favs,
+    favoritesLoading,
+    favoritesError,
+    reloadFavorites,
     toggleFav,
-    user,
-    setUser,
-    city,
-    setCity,
-    contact,
-    setContact,
     ads,
     publish,
     chats,

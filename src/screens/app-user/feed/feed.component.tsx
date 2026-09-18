@@ -7,11 +7,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookRow,
   Chip,
   Empty,
-  ScreenTitle,
+  ScreenHeader,
   useCommonStyles,
 } from 'shared/components/ui';
 import { useAppStore } from 'store/AppStore';
@@ -21,7 +22,8 @@ import { useStyles } from './feed.styles';
 import type { FeedScreenProps } from './feed.types';
 
 export function FeedScreen({ navigation }: FeedScreenProps) {
-  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const styles = useStyles({ bottomInset: insets.bottom });
   const common = useCommonStyles();
   const { theme } = useTheme();
   const store = useAppStore();
@@ -47,63 +49,67 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
   );
 
   return (
-    <ScrollView
-      contentContainerStyle={common.page}
-      refreshControl={
-        <RefreshControl
-          refreshing={store.booksLoading}
-          onRefresh={store.reloadBooks}
-        />
-      }
-    >
-      <ScreenTitle right={<Chip label={profile?.city || store.city} />}>
-        Що поруч
-      </ScreenTitle>
-      <TextInput
-        style={styles.search}
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Автор, назва, предмет…"
-        placeholderTextColor={styles.colors.placeholder}
+    <View style={styles.screen}>
+      <ScreenHeader
+        title="Що поруч"
+        right={<Chip label={profile?.city || 'Місто'} />}
       />
+
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
+        contentContainerStyle={[common.page, styles.page]}
+        refreshControl={
+          <RefreshControl
+            refreshing={store.booksLoading}
+            onRefresh={store.reloadBooks}
+          />
+        }
       >
-        {['Усі', 'Підручники', 'Художня', 'Даром'].map(value => (
-          <Chip
-            key={value}
-            label={value}
-            active={category === value}
-            onPress={() => setCategory(value)}
-          />
-        ))}
+        <TextInput
+          style={styles.search}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Автор, назва, предмет…"
+          placeholderTextColor={styles.colors.placeholder}
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chips}
+        >
+          {['Усі', 'Підручники', 'Художня', 'Даром'].map(value => (
+            <Chip
+              key={value}
+              label={value}
+              active={category === value}
+              onPress={() => setCategory(value)}
+            />
+          ))}
+        </ScrollView>
+        <Text style={common.mini}>
+          {list.length} книг · сортування: найновіші
+        </Text>
+        {store.booksLoading && !store.books.length ? (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color={theme.palette.accent} />
+          </View>
+        ) : store.booksError ? (
+          <Empty text={`Не вдалося завантажити книги: ${store.booksError}`} />
+        ) : list.length ? (
+          list.map(book => (
+            <BookRow
+              key={book.id}
+              book={book}
+              favorite={store.favs.includes(book.id)}
+              onOpen={() =>
+                navigation.getParent()?.navigate('Book', { bookId: book.id })
+              }
+              onHeart={() => store.toggleFav(book.id)}
+            />
+          ))
+        ) : (
+          <Empty text="Нічого не знайшлось. Спробуй іншу назву або скинь фільтр." />
+        )}
       </ScrollView>
-      <Text style={common.mini}>
-        {list.length} книг · сортування: найновіші
-      </Text>
-      {store.booksLoading && !store.books.length ? (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.palette.accent} />
-        </View>
-      ) : store.booksError ? (
-        <Empty text={`Не вдалося завантажити книги: ${store.booksError}`} />
-      ) : list.length ? (
-        list.map(book => (
-          <BookRow
-            key={book.id}
-            book={book}
-            favorite={store.favs.includes(book.id)}
-            onOpen={() =>
-              navigation.getParent()?.navigate('Book', { bookId: book.id })
-            }
-            onHeart={() => store.toggleFav(book.id)}
-          />
-        ))
-      ) : (
-        <Empty text="Нічого не знайшлось. Спробуй іншу назву або скинь фільтр." />
-      )}
-    </ScrollView>
+    </View>
   );
 }

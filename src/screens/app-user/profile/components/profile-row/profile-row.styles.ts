@@ -17,6 +17,22 @@ export const useStyles = createStyles(({ theme, scale }: any) =>
       fontWeight: '600',
       color: theme.palette.text,
     },
-    value: { fontSize: scale(12.5), color: theme.palette.neutral600 },
+    right: {
+      flex: 1,
+      marginLeft: scale(16),
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: scale(6),
+    },
+    value: {
+      flexShrink: 1,
+      fontSize: scale(12.5),
+      color: theme.palette.neutral600,
+    },
+    arrow: {
+      fontSize: scale(18),
+      color: theme.palette.neutral600,
+    },
   }),
 );

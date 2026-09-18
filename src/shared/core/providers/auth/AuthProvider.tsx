@@ -18,6 +18,14 @@ type AuthContextValue = {
   isLoading: boolean;
   profileError: string | null;
   refreshProfile: () => Promise<void>;
+  updateProfile: (
+    changes: Partial<
+      Pick<
+        Profile,
+        'display_name' | 'phone' | 'city' | 'latitude' | 'longitude'
+      >
+    >,
+  ) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -131,9 +139,46 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [loadProfile, session?.user.id],
   );
 
+  const updateProfile = useCallback(
+    async (
+      changes: Partial<
+        Pick<
+          Profile,
+          'display_name' | 'phone' | 'city' | 'latitude' | 'longitude'
+        >
+      >,
+    ) => {
+      if (!sessionUserId) {
+        throw new Error('Увійди в акаунт, щоб редагувати профіль.');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(changes)
+        .eq('id', sessionUserId)
+        .select('*')
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setProfile(data);
+      setProfileError(null);
+    },
+    [sessionUserId],
+  );
+
   const value = useMemo(
-    () => ({ session, profile, isLoading, profileError, refreshProfile }),
-    [session, profile, isLoading, profileError, refreshProfile],
+    () => ({
+      session,
+      profile,
+      isLoading,
+      profileError,
+      refreshProfile,
+      updateProfile,
+    }),
+    [session, profile, isLoading, profileError, refreshProfile, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

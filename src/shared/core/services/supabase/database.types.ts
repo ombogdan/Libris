@@ -32,6 +32,19 @@ export type BookListing = {
   updated_at: string;
 };
 
+export type BookFavorite = {
+  user_id: string;
+  listing_id: string;
+  created_at: string;
+};
+
+export type ListingSellerProfile = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  listings_count: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -54,8 +67,21 @@ export type Database = {
         Update: Partial<Omit<BookListing, 'id' | 'seller_id' | 'created_at'>>;
         Relationships: [];
       };
+      book_favorites: {
+        Row: BookFavorite;
+        Insert: Omit<BookFavorite, 'created_at'> & {
+          created_at?: string;
+        };
+        Update: Partial<Pick<BookFavorite, 'created_at'>>;
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      listing_seller_profiles: {
+        Row: ListingSellerProfile;
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

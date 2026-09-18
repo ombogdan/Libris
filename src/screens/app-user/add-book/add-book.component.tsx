@@ -6,7 +6,7 @@ import {
   Button,
   Chip,
   Field,
-  ScreenTitle,
+  ScreenHeader,
   useCommonStyles,
 } from 'shared/components/ui';
 import { useAuth } from 'providers/auth/AuthProvider';
@@ -135,101 +135,109 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
   };
 
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={[common.page, styles.page]}
-      keyboardShouldPersistTaps="handled"
-      enableOnAndroid
-      enableResetScrollToCoords={false}
-      extraScrollHeight={styles.keyboardExtraScrollHeight}
-      keyboardOpeningTime={0}
-      showsVerticalScrollIndicator={false}
-    >
-      <ScreenTitle>Нова книга</ScreenTitle>
-      <Text style={common.subtitle}>
-        Заповни дані — і оголошення з’явиться у стрічці.
-      </Text>
-      <BookImagesPicker
-        images={form.images}
-        onChange={images => set('images', images)}
-        onError={setError}
-      />
-      <Field
-        compact
-        label="Назва"
-        value={form.title}
-        onChangeText={value => set('title', value)}
-      />
-      <Field
-        compact
-        label="Автор"
-        value={form.author}
-        onChangeText={value => set('author', value)}
-      />
-      <Text style={styles.label}>Ціна</Text>
-      <View style={common.inline}>
+    <View style={styles.screen}>
+      <ScreenHeader title="Нова книга" />
+
+      <KeyboardAwareScrollView
+        style={styles.scroll}
+        contentContainerStyle={[common.page, styles.page]}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        enableResetScrollToCoords={false}
+        extraScrollHeight={styles.keyboardExtraScrollHeight}
+        keyboardOpeningTime={0}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={common.subtitle}>
+          Заповни дані — і оголошення з’явиться у стрічці.
+        </Text>
+        <BookImagesPicker
+          images={form.images}
+          onChange={images => set('images', images)}
+          onError={setError}
+        />
+        <Field
+          compact
+          label="Назва"
+          value={form.title}
+          onChangeText={value => set('title', value)}
+        />
+        <Field
+          compact
+          label="Автор"
+          value={form.author}
+          onChangeText={value => set('author', value)}
+        />
+        <Text style={styles.label}>Ціна</Text>
+        <View style={common.inline}>
+          <TextInput
+            editable={!form.free}
+            keyboardType="numeric"
+            style={[
+              styles.input,
+              styles.grow,
+              form.free && styles.disabledInput,
+            ]}
+            value={form.price}
+            onChangeText={value => set('price', value)}
+            placeholder="220 ₴"
+            placeholderTextColor={styles.colors.placeholder}
+          />
+          <Chip
+            label="Віддам даром"
+            active={form.free}
+            onPress={() => set('free', !form.free)}
+          />
+        </View>
+        <Text style={styles.label}>Стан</Text>
+        <View style={styles.chips}>
+          {['Як нова', 'Добрий', 'Читана'].map(condition => (
+            <Chip
+              key={condition}
+              label={condition}
+              active={form.condition === condition}
+              onPress={() => set('condition', condition)}
+            />
+          ))}
+        </View>
+        <View style={styles.cityHeading}>
+          <Text style={styles.label}>Місто</Text>
+          <Chip
+            label={isLocating ? 'Визначаємо…' : 'Визначити зараз'}
+            onPress={isLocating ? undefined : detectCity}
+          />
+        </View>
         <TextInput
-          editable={!form.free}
-          keyboardType="numeric"
-          style={[styles.input, styles.grow, form.free && styles.disabledInput]}
-          value={form.price}
-          onChangeText={value => set('price', value)}
-          placeholder="220 ₴"
+          style={styles.input}
+          value={form.city}
+          onChangeText={value => {
+            cityEdited.current = true;
+            setForm(current => ({
+              ...current,
+              city: value,
+              latitude: null,
+              longitude: null,
+            }));
+          }}
+          placeholder="Наприклад, Полтава"
           placeholderTextColor={styles.colors.placeholder}
         />
-        <Chip
-          label="Віддам даром"
-          active={form.free}
-          onPress={() => set('free', !form.free)}
+        <Text style={styles.label}>Коротко про книгу</Text>
+        <TextInput
+          multiline
+          style={[styles.input, styles.textarea]}
+          value={form.about}
+          onChangeText={value => set('about', value)}
+          placeholder="Читала один раз, обкладинка як нова."
+          placeholderTextColor={styles.colors.placeholder}
         />
-      </View>
-      <Text style={styles.label}>Стан</Text>
-      <View style={styles.chips}>
-        {['Як нова', 'Добрий', 'Читана'].map(condition => (
-          <Chip
-            key={condition}
-            label={condition}
-            active={form.condition === condition}
-            onPress={() => set('condition', condition)}
-          />
-        ))}
-      </View>
-      <View style={styles.cityHeading}>
-        <Text style={styles.label}>Місто</Text>
-        <Chip
-          label={isLocating ? 'Визначаємо…' : 'Визначити зараз'}
-          onPress={isLocating ? undefined : detectCity}
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <Button
+          label={isPublishing ? 'Публікуємо…' : 'Опублікувати'}
+          disabled={isPublishing}
+          onPress={publish}
         />
-      </View>
-      <TextInput
-        style={styles.input}
-        value={form.city}
-        onChangeText={value => {
-          cityEdited.current = true;
-          setForm(current => ({
-            ...current,
-            city: value,
-            latitude: null,
-            longitude: null,
-          }));
-        }}
-        placeholder="Наприклад, Полтава"
-        placeholderTextColor={styles.colors.placeholder}
-      />
-      <Text style={styles.label}>Коротко про книгу</Text>
-      <TextInput
-        multiline
-        style={[styles.input, styles.textarea]}
-        value={form.about}
-        onChangeText={value => set('about', value)}
-        placeholder="Читала один раз, обкладинка як нова."
-        placeholderTextColor={styles.colors.placeholder}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button
-        label={isPublishing ? 'Публікуємо…' : 'Опублікувати'}
-        disabled={isPublishing}
-        onPress={publish}
-      />
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }

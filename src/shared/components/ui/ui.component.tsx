@@ -16,11 +16,13 @@ export function Button({
   label,
   onPress,
   secondary = false,
+  danger = false,
   disabled = false,
 }: {
   label: string;
   onPress: () => void;
   secondary?: boolean;
+  danger?: boolean;
   disabled?: boolean;
 }) {
   const styles = useStyles();
@@ -31,12 +33,17 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         secondary && styles.secondaryButton,
+        danger && styles.dangerButton,
         disabled && styles.disabled,
         pressed && styles.pressed,
       ]}
     >
       <Text
-        style={[styles.buttonText, secondary && styles.secondaryButtonText]}
+        style={[
+          styles.buttonText,
+          secondary && styles.secondaryButtonText,
+          danger && styles.dangerButtonText,
+        ]}
       >
         {label}
       </Text>
@@ -189,6 +196,39 @@ export function ScreenTitle({
     <View style={styles.heading}>
       <Text style={styles.h2}>{children}</Text>
       {right}
+    </View>
+  );
+}
+
+export function ScreenHeader({
+  title,
+  right,
+  onBack,
+  children,
+}: {
+  title?: string;
+  right?: React.ReactNode;
+  onBack?: () => void;
+  children?: React.ReactNode;
+}) {
+  const styles = useStyles();
+
+  return (
+    <View style={styles.screenHeader}>
+      <View style={styles.screenHeaderRow}>
+        {onBack ? (
+          <Pressable
+            hitSlop={styles.hitSlop}
+            onPress={onBack}
+            style={styles.screenHeaderBack}
+          >
+            <Text style={styles.screenHeaderBackText}>←</Text>
+          </Pressable>
+        ) : null}
+        <View style={styles.screenHeaderContent}>
+          {children ?? <ScreenTitle right={right}>{title ?? ''}</ScreenTitle>}
+        </View>
+      </View>
     </View>
   );
 }

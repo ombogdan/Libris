@@ -4,7 +4,15 @@ import { createStyles } from 'shared/theme/createStyles';
 export const useStyles = createStyles(
   ({ theme, scale, bottomInset = 0 }: any) => ({
     ...StyleSheet.create({
+      screen: {
+        flex: 1,
+        backgroundColor: theme.palette.background,
+      },
+      scroll: {
+        flex: 1,
+      },
       page: {
+        paddingTop: scale(16),
         paddingBottom: scale(136) + bottomInset,
       },
       label: {

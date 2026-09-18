@@ -26,6 +26,9 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         borderWidth: scale(1),
         borderColor: theme.palette.divider,
       },
+      dangerButton: {
+        backgroundColor: theme.palette.error,
+      },
       disabled: { opacity: 0.5 },
       pressed: { opacity: 0.7 },
       buttonText: {
@@ -34,6 +37,7 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         color: theme.palette.background,
       },
       secondaryButtonText: { color: theme.palette.text },
+      dangerButtonText: { color: theme.palette.white },
       chip: {
         minHeight: scale(40),
         borderRadius: scale(999),
@@ -143,6 +147,35 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        backgroundColor: theme.palette.neutral200,
+      },
+      screenHeader: {
+        paddingHorizontal: scale(18),
+        paddingTop: scale(12),
+        paddingBottom: scale(12),
+        backgroundColor: theme.palette.background,
+        borderBottomWidth: scale(1),
+        borderBottomColor: theme.palette.divider,
+      },
+      screenHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
+      screenHeaderContent: {
+        flex: 1,
+      },
+      screenHeaderBack: {
+        width: scale(40),
+        height: scale(40),
+        marginRight: scale(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      screenHeaderBackText: {
+        color: theme.palette.accent700,
+        fontSize: scale(24),
+        lineHeight: scale(28),
+        fontWeight: '700',
       },
       h2: {
         fontSize: scale(30),
