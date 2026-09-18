@@ -38,11 +38,55 @@ export type BookFavorite = {
   created_at: string;
 };
 
+export type ChatConversation = {
+  id: string;
+  listing_id: string | null;
+  buyer_id: string;
+  seller_id: string;
+  listing_title: string;
+  listing_price: number;
+  listing_cover_url: string | null;
+  last_message_text: string | null;
+  last_message_sender_id: string | null;
+  last_message_at: string | null;
+  buyer_unread_count: number;
+  seller_unread_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+};
+
 export type ListingSellerProfile = {
   id: string;
   display_name: string;
   avatar_url: string | null;
   listings_count: number;
+};
+
+export type ChatConversationSummary = {
+  conversation_id: string;
+  listing_id: string | null;
+  listing_title: string;
+  listing_price: number;
+  listing_cover_url: string | null;
+  buyer_id: string;
+  seller_id: string;
+  other_user_id: string;
+  other_user_display_name: string;
+  other_user_avatar_url: string | null;
+  last_message_text: string | null;
+  last_message_sender_id: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Database = {
@@ -75,14 +119,63 @@ export type Database = {
         Update: Partial<Pick<BookFavorite, 'created_at'>>;
         Relationships: [];
       };
+      chat_conversations: {
+        Row: ChatConversation;
+        Insert: {
+          id?: string;
+          listing_id?: string | null;
+          buyer_id: string;
+          seller_id: string;
+          listing_title: string;
+          listing_price: number;
+          listing_cover_url?: string | null;
+          last_message_text?: string | null;
+          last_message_sender_id?: string | null;
+          last_message_at?: string | null;
+          buyer_unread_count?: number;
+          seller_unread_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<ChatConversation>;
+        Relationships: [];
+      };
+      chat_messages: {
+        Row: ChatMessage;
+        Insert: Omit<ChatMessage, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Omit<ChatMessage, 'id' | 'conversation_id' | 'sender_id'>
+        >;
+        Relationships: [];
+      };
     };
     Views: {
       listing_seller_profiles: {
         Row: ListingSellerProfile;
         Relationships: [];
       };
+      chat_conversation_summaries: {
+        Row: ChatConversationSummary;
+        Relationships: [];
+      };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      get_chat_other_participant_profile: {
+        Args: { p_conversation_id: string };
+        Returns: Array<Pick<Profile, 'id' | 'display_name' | 'avatar_url'>>;
+      };
+      get_or_create_listing_conversation: {
+        Args: { p_listing_id: string };
+        Returns: ChatConversation[];
+      };
+      mark_chat_conversation_read: {
+        Args: { p_conversation_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

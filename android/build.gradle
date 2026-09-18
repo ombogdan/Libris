@@ -19,3 +19,18 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+gradle.projectsEvaluated {
+    def nitroModulesProject = findProject(":react-native-nitro-modules")
+    def mmkvProject = findProject(":react-native-mmkv")
+
+    if (nitroModulesProject != null && mmkvProject != null) {
+        def prepareNitroHeaders = nitroModulesProject.tasks.named("prepareHeaders")
+
+        mmkvProject.tasks.configureEach { task ->
+            if (task.name.startsWith("configureCMake")) {
+                task.dependsOn(prepareNitroHeaders)
+            }
+        }
+    }
+}

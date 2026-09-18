@@ -112,48 +112,36 @@ export const books: Book[] = [
   },
 ];
 
-export type Message = { me: boolean; text: string };
+export type MessageStatus = 'sending' | 'sent' | 'failed';
+
+export type Message = {
+  id: string;
+  me: boolean;
+  text: string;
+  createdAt: string;
+  status: MessageStatus;
+};
+
 export type Chat = {
   id: string;
+  listingId: string | null;
+  otherUserId: string;
   name: string;
+  avatarUrl: string | null;
   about: string;
+  coverUrl: string | null;
   time: string;
   unread: boolean;
+  unreadCount: number;
+  lastMessage: string;
+  lastMessageAt: string | null;
   msgs: Message[];
+  messagesLoaded: boolean;
+  messagesLoading: boolean;
+  messagesLoadingMore: boolean;
+  hasMoreMessages: boolean;
+  messagesError: string | null;
 };
-export const initialChats: Chat[] = [
-  {
-    id: 'c1',
-    name: 'Оксана Д.',
-    about: 'Кобзар · 180 ₴',
-    time: '12:40',
-    unread: true,
-    msgs: [
-      { me: false, text: 'Вітаю! Книга ще актуальна 🙂' },
-      { me: true, text: 'Так, є. Коли вам зручно забрати?' },
-      { me: false, text: 'Можу сьогодні після 18:00, район вокзалу' },
-    ],
-  },
-  {
-    id: 'c2',
-    name: 'Андрій М.',
-    about: 'Вища математика · 250 ₴',
-    time: 'Вчора',
-    unread: false,
-    msgs: [
-      { me: true, text: 'Добрий день! Віддасте за 200?' },
-      { me: false, text: 'За 220 і зустрінемось у центрі' },
-    ],
-  },
-  {
-    id: 'c3',
-    name: 'Марта К.',
-    about: 'Тигролови · Даром',
-    time: 'Пн',
-    unread: false,
-    msgs: [{ me: false, text: 'Забрали книгу, дякую! Гарного читання' }],
-  },
-];
 
 export type Ad = {
   id: string;

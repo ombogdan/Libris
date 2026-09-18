@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from 'providers/auth/AuthProvider';
 import { t } from 'shared/localization/i18n';
+import { useAppStore } from 'store/AppStore';
 import {
   AddBookScreen,
   BookScreen,
@@ -97,6 +98,8 @@ function Tabs() {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const { theme } = useTheme();
+  const { chats } = useAppStore();
+  const unreadChats = chats.filter(chat => chat.unread).length;
   const labels: { [K in keyof TabParamList]: string } = {
     Feed: t('tabs.feed'),
     Favorites: t('tabs.favorites'),
@@ -136,7 +139,10 @@ function Tabs() {
       <Tab.Screen
         name="Chats"
         component={ChatsScreen}
-        options={{ tabBarLabel: labels.Chats }}
+        options={{
+          tabBarLabel: labels.Chats,
+          tabBarBadge: unreadChats || undefined,
+        }}
       />
       <Tab.Screen
         name="Profile"

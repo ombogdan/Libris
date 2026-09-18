@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -9,6 +9,7 @@ import {
   ScreenHeader,
   useCommonStyles,
 } from 'shared/components/ui';
+import { useAuth } from 'providers/auth/AuthProvider';
 import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
 import { useStyles } from './book.styles';
@@ -19,7 +20,30 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   const styles = useStyles({ bottomInset: insets.bottom });
   const common = useCommonStyles();
   const store = useAppStore();
+  const { session } = useAuth();
+  const [isOpeningChat, setIsOpeningChat] = useState(false);
   const book = store.books.find(item => item.id === route.params.bookId);
+  const isOwnListing = book?.sellerId === session?.user.id;
+
+  const openChat = async () => {
+    if (!book || isOpeningChat || isOwnListing) {
+      return;
+    }
+
+    setIsOpeningChat(true);
+    try {
+      const chat = await store.openSellerChat(book);
+      navigation.navigate('Thread', { chatId: chat.id });
+    } catch (error) {
+      store.notify(
+        error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : 'Не вдалося відкрити чат.',
+      );
+    } finally {
+      setIsOpeningChat(false);
+    }
+  };
 
   if (!book) {
     return (
@@ -55,11 +79,15 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           </View>
         </View>
         <Button
-          label="Написати продавцю"
-          onPress={() => {
-            const chat = store.openSellerChat(book);
-            navigation.navigate('Thread', { chatId: chat.id });
-          }}
+          label={
+            isOwnListing
+              ? 'Це ваше оголошення'
+              : isOpeningChat
+              ? 'Відкриваємо чат…'
+              : 'Написати продавцю'
+          }
+          disabled={isOpeningChat || isOwnListing}
+          onPress={openChat}
         />
         <Button
           secondary
