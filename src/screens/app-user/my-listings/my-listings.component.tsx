@@ -1,8 +1,8 @@
 import React from 'react';
 import { Pressable, ScrollView, Text } from 'react-native';
 
-import { Button, ScreenTitle } from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
+import { Button, ScreenTitle } from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
 import { ListingItem } from './components/listing-item';
 import { useStyles } from './my-listings.styles';
 import type { MyListingsScreenProps } from './my-listings.types';

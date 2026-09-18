@@ -6,8 +6,8 @@ import {
   Empty,
   PricePill,
   useCommonStyles,
-} from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
+} from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
 import { useStyles } from './book.styles';
 import type { BookScreenProps } from './book.types';

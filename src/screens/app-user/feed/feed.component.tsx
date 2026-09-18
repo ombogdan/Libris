@@ -13,10 +13,10 @@ import {
   Empty,
   ScreenTitle,
   useCommonStyles,
-} from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
-import { useAuth } from '../../auth/AuthProvider';
-import { useTheme } from '../../theme';
+} from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { useTheme } from 'shared/theme';
 import { useStyles } from './feed.styles';
 import type { FeedScreenProps } from './feed.types';
 

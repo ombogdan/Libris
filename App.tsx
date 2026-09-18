@@ -4,10 +4,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { useStyles } from './App.styles';
-import { AuthProvider } from './src/auth/AuthProvider';
+import { AuthProvider } from 'providers/auth/AuthProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { AppStoreProvider, useAppStore } from './src/store/AppStore';
-import { ThemeProvider, useTheme } from './src/theme';
+import { AppStoreProvider, useAppStore } from 'store/AppStore';
+import { ThemeProvider, useTheme } from 'shared/theme';
 
 function AppContent() {
   const styles = useStyles();

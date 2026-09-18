@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { createStyles } from '../../theme';
+import { createStyles } from 'shared/theme/createStyles';
 
 export const useStyles = createStyles(({ theme, scale }: any) => {
   const shadow = {
@@ -94,7 +94,13 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
       coverAccent: { backgroundColor: theme.palette.accent300 },
       coverViolet: { backgroundColor: theme.palette.violet300 },
       coverNeutral: { backgroundColor: theme.palette.neutral300 },
-      coverImage: { position: 'absolute', width: '100%', height: '100%' },
+      coverImage: {
+        position: 'absolute',
+        top: scale(0),
+        right: scale(0),
+        bottom: scale(0),
+        left: scale(0),
+      },
       coverBig: {
         width: scale(168),
         height: scale(232),

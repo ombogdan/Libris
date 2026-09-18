@@ -2,8 +2,8 @@ import 'react-native-url-polyfill/auto';
 
 import { AppState, Platform } from 'react-native';
 import { createClient, processLock } from '@supabase/supabase-js';
-import { env } from '../../config/env';
-import { supabaseAuthStorage } from '../storage/mmkv';
+import { env } from 'configs/env';
+import { supabaseAuthStorage } from 'services/storage/mmkv';
 import type { Database } from './database.types';
 
 export const supabase = createClient<Database>(

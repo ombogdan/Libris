@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
-import { ScreenTitle } from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
+import { ScreenTitle } from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
 import { ChatItem } from './components/chat-item';
 import { useStyles } from './chats.styles';
 import type { ChatsScreenProps } from './chats.types';

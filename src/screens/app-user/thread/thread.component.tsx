@@ -9,8 +9,8 @@ import {
   View,
 } from 'react-native';
 
-import { Chip } from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
+import { Chip } from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
 import { MessageBubble } from './components/message-bubble';
 import { useStyles } from './thread.styles';
 import type { ThreadScreenProps } from './thread.types';

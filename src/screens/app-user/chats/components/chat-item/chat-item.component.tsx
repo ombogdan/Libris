@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useCommonStyles } from '../../../../components/ui';
+import { useCommonStyles } from 'shared/components/ui';
 import { useStyles } from './chat-item.styles';
 import type { ChatItemProps } from './chat-item.types';
 

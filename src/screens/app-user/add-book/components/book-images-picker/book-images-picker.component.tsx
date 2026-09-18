@@ -1,9 +1,47 @@
 import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { useCommonStyles } from '../../../../components/ui';
+import { Asset, launchImageLibrary } from 'react-native-image-picker';
+import { useCommonStyles } from 'shared/components/ui';
+import type { LocalBookImage } from 'services/books';
 import { useStyles } from './book-images-picker.styles';
 import type { BookImagesPickerProps } from './book-images-picker.types';
+
+function normalizeImage(asset: Asset, index: number): LocalBookImage | null {
+  if (!asset.uri) {
+    return null;
+  }
+
+  const originalName = asset.fileName || `book-${Date.now()}-${index}.jpg`;
+  const originalType = asset.type?.toLowerCase() || '';
+  const extension = originalName.split('.').pop()?.toLowerCase();
+  const isHeic =
+    originalType === 'image/heic' ||
+    originalType === 'image/heif' ||
+    extension === 'heic' ||
+    extension === 'heif';
+  const inferredType =
+    extension === 'png'
+      ? 'image/png'
+      : extension === 'webp'
+      ? 'image/webp'
+      : extension === 'jpg' || extension === 'jpeg'
+      ? 'image/jpeg'
+      : '';
+  const type = isHeic
+    ? 'image/jpeg'
+    : originalType === 'image/jpg'
+    ? 'image/jpeg'
+    : originalType || inferredType || 'application/octet-stream';
+  const fileName = isHeic
+    ? originalName.replace(/\.(heic|heif)$/i, '.jpg')
+    : originalName;
+
+  return {
+    uri: asset.uri,
+    type,
+    fileName,
+  };
+}
 
 export function BookImagesPicker({
   images,
@@ -41,13 +79,16 @@ export function BookImagesPicker({
       return;
     }
 
-    const selected = (result.assets ?? [])
-      .filter(asset => asset.uri)
-      .map((asset, index) => ({
-        uri: asset.uri!,
-        type: asset.type || 'image/jpeg',
-        fileName: asset.fileName || `book-${Date.now()}-${index}.jpg`,
-      }));
+    const assets = result.assets ?? [];
+    const selected = assets
+      .map(normalizeImage)
+      .filter((image): image is LocalBookImage => image !== null);
+    if (selected.length !== assets.length) {
+      onError('Не вдалося отримати вибране фото. Спробуй обрати його ще раз.');
+    }
+    if (!selected.length) {
+      return;
+    }
     const known = new Set(images.map(image => image.uri));
     onChange(
       [...images, ...selected.filter(image => !known.has(image.uri))].slice(

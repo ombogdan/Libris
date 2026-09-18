@@ -1,1 +1,32 @@
-{ "extends": "@react-native/typescript-config", "compilerOptions": { "strict": true } }
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "jsx": "react",
+    "baseUrl": "./src",
+    "paths": {
+      "types/*": ["types/*"],
+      "shared/*": ["shared/*"],
+      "screens/*": ["screens/*"],
+      "core/*": ["shared/core/*"],
+      "configs/*": ["shared/core/configs/*"],
+      "services/*": ["shared/core/services/*"],
+      "providers/*": ["shared/core/providers/*"],
+      "theme/*": ["shared/theme/*"],
+      "enums/*": ["shared/enums/*"],
+      "hooks/*": ["shared/hooks/*"],
+      "api/*": ["shared/hooks/api/*"],
+      "store/*": ["shared/store/*"],
+      "ui-kit/*": ["shared/ui-kit/*"],
+      "utils/*": ["shared/utils/*"],
+      "assets/*": ["shared/assets/*"],
+      "constants/*": ["shared/constants/*"],
+      "components/*": ["shared/components/*"],
+      "icons/*": ["shared/assets/icons/*"]
+    },
+    "types": ["node", "react-native"],
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "babel.config.js", "src/assets"]
+}

@@ -1,10 +1,10 @@
 import React from 'react';
 import { act, create, ReactTestRenderer } from 'react-test-renderer';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
-import { supabase } from '../src/services/supabase';
+import { AuthProvider, useAuth } from 'providers/auth/AuthProvider';
+import { supabase } from 'services/supabase';
 
-jest.mock('../src/services/supabase', () => ({
+jest.mock('services/supabase', () => ({
   supabase: {
     auth: { getSession: jest.fn(), onAuthStateChange: jest.fn() },
     from: jest.fn(),

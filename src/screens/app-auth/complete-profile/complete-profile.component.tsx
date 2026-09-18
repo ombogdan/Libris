@@ -7,12 +7,12 @@ import {
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Button, Field, useCommonStyles } from '../../components/ui';
-import { useAuth } from '../../auth/AuthProvider';
-import { supabase } from '../../services/supabase';
-import { getUserLocation, UserLocation } from '../../services/location';
-import { signOutFromGoogle } from '../../services/auth';
-import { useTheme } from '../../theme';
+import { Button, Field, useCommonStyles } from 'shared/components/ui';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { supabase } from 'services/supabase';
+import { getUserLocation, UserLocation } from 'services/location';
+import { signOutFromGoogle } from 'services/auth';
+import { useTheme } from 'shared/theme';
 import { useStyles } from './complete-profile.styles';
 
 export function CompleteProfileScreen() {

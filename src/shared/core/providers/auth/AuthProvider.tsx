@@ -9,8 +9,8 @@ import React, {
   useState,
 } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from '../services/supabase';
-import type { Profile } from '../services/supabase/database.types';
+import { supabase } from 'services/supabase';
+import type { Profile } from 'services/supabase/database.types';
 
 type AuthContextValue = {
   session: Session | null;

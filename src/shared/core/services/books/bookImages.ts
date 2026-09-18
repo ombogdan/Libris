@@ -14,12 +14,46 @@ function filePath(uri: string) {
   return decodeURIComponent(uri.replace(/^file:\/\//, ''));
 }
 
-function extension(image: LocalBookImage) {
-  const fromName = image.fileName.split('.').pop()?.toLowerCase();
-  if (fromName && /^[a-z0-9]+$/.test(fromName)) {
-    return fromName === 'heic' || fromName === 'heif' ? 'jpg' : fromName;
+type SupportedImageFormat = {
+  extension: 'jpg' | 'png' | 'webp';
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+};
+
+function detectImageFormat(buffer: ArrayBuffer): SupportedImageFormat | null {
+  const bytes = new Uint8Array(buffer);
+
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xff &&
+    bytes[1] === 0xd8 &&
+    bytes[2] === 0xff
+  ) {
+    return { extension: 'jpg', mimeType: 'image/jpeg' };
   }
-  return image.type.split('/')[1] || 'jpg';
+
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return { extension: 'png', mimeType: 'image/png' };
+  }
+
+  if (
+    bytes.length >= 12 &&
+    String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF' &&
+    String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP'
+  ) {
+    return { extension: 'webp', mimeType: 'image/webp' };
+  }
+
+  return null;
 }
 
 export async function uploadBookImages(
@@ -33,12 +67,20 @@ export async function uploadBookImages(
   try {
     for (let index = 0; index < images.length; index += 1) {
       const image = images[index];
-      const path = `${userId}/${listingId}/${index + 1}.${extension(image)}`;
       const base64 = await readFile(filePath(image.uri), 'base64');
+      const imageBuffer = decode(base64);
+      const format = detectImageFormat(imageBuffer);
+      if (!format) {
+        throw new Error(
+          'Формат фото не підтримується. Обери JPG, PNG або WebP.',
+        );
+      }
+
+      const path = `${userId}/${listingId}/${index + 1}.${format.extension}`;
       const { error } = await supabase.storage
         .from(BUCKET)
-        .upload(path, decode(base64), {
-          contentType: image.type,
+        .upload(path, imageBuffer, {
+          contentType: format.mimeType,
           cacheControl: '31536000',
           upsert: false,
         });

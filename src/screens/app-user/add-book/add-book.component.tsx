@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button,
   Chip,
   Field,
   ScreenTitle,
   useCommonStyles,
-} from '../../components/ui';
-import { useAuth } from '../../auth/AuthProvider';
-import { useAppStore } from '../../store/AppStore';
-import { getCityCenter, getUserLocation } from '../../services/location';
+} from 'shared/components/ui';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { useAppStore } from 'store/AppStore';
+import { getCityCenter, getUserLocation } from 'services/location';
 import { BookImagesPicker } from './components/book-images-picker';
 import { useStyles } from './add-book.styles';
 import type { AddBookForm, AddBookScreenProps } from './add-book.types';
@@ -28,7 +30,8 @@ const emptyForm: AddBookForm = {
 };
 
 export function AddBookScreen({ navigation }: AddBookScreenProps) {
-  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const styles = useStyles({ bottomInset: insets.bottom });
   const common = useCommonStyles();
   const store = useAppStore();
   const { profile } = useAuth();
@@ -132,9 +135,14 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={common.page}
+    <KeyboardAwareScrollView
+      contentContainerStyle={[common.page, styles.page]}
       keyboardShouldPersistTaps="handled"
+      enableOnAndroid
+      enableResetScrollToCoords={false}
+      extraScrollHeight={styles.keyboardExtraScrollHeight}
+      keyboardOpeningTime={0}
+      showsVerticalScrollIndicator={false}
     >
       <ScreenTitle>Нова книга</ScreenTitle>
       <Text style={common.subtitle}>
@@ -222,6 +230,6 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
         disabled={isPublishing}
         onPress={publish}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { useAuth } from '../../auth/AuthProvider';
-import { ScreenTitle } from '../../components/ui';
-import { signOutFromGoogle } from '../../services/auth';
-import { useAppStore } from '../../store/AppStore';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { ScreenTitle } from 'shared/components/ui';
+import { signOutFromGoogle } from 'services/auth';
+import { useAppStore } from 'store/AppStore';
 import { ProfileMetric } from './components/profile-metric';
 import { ProfileRow } from './components/profile-row';
 import { useStyles } from './profile.styles';

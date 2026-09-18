@@ -2,8 +2,8 @@ import {
   GoogleSignin,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
-import {env} from '../../config/env';
-import {supabase} from '../supabase';
+import { env } from 'configs/env';
+import { supabase } from 'services/supabase';
 
 GoogleSignin.configure({
   webClientId: env.googleWebClientId || undefined,
@@ -14,7 +14,7 @@ export async function signInWithGoogle() {
     throw new Error('Missing GOOGLE_WEB_CLIENT_ID in .env');
   }
 
-  await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const result = await GoogleSignin.signIn();
 
   if (!isSuccessResponse(result)) {
@@ -27,7 +27,7 @@ export async function signInWithGoogle() {
     throw new Error('Google did not return an ID token');
   }
 
-  const {data, error} = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'google',
     token: idToken,
   });

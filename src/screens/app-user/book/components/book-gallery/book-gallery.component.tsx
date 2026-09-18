@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, ScrollView, View } from 'react-native';
-import { Cover } from '../../../../components/ui';
+import { Cover } from 'shared/components/ui';
 import { useStyles } from './book-gallery.styles';
 import type { BookGalleryProps } from './book-gallery.types';
 

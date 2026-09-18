@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { createStyles } from '../../theme';
+import { createStyles } from 'shared/theme/createStyles';
 
 export const useStyles = createStyles(({ theme, scale }: any) =>
   StyleSheet.create({

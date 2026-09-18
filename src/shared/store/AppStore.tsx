@@ -7,12 +7,12 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { Ad, Book, Chat, initialChats } from '../data';
-import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../services/supabase';
-import type { BookListing } from '../services/supabase/database.types';
-import { removeBookImages, uploadBookImages } from '../services/books';
-import type { LocalBookImage } from '../services/books';
+import { Ad, Book, Chat, initialChats } from 'shared/data';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { supabase } from 'services/supabase';
+import type { BookListing } from 'services/supabase/database.types';
+import { removeBookImages, uploadBookImages } from 'services/books';
+import type { LocalBookImage } from 'services/books';
 
 type AddForm = {
   title: string;

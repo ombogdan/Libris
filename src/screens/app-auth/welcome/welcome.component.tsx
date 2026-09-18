@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, Chip } from '../../components/ui';
+import { Button, Chip } from 'shared/components/ui';
 import { useStyles } from './welcome.styles';
 import type { WelcomeScreenProps } from './welcome.types';
 

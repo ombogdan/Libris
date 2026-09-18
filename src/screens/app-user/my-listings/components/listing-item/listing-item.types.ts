@@ -1,4 +1,4 @@
-import type { Ad } from '../../../../data';
+import type { Ad } from 'shared/data';
 
 export type ListingItemProps = {
   ad: Ad;

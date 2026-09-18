@@ -1,6 +1,6 @@
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { TabParamList } from '../../navigation/types';
-import type { LocalBookImage } from '../../services/books';
+import type { TabParamList } from 'types/navigation';
+import type { LocalBookImage } from 'services/books';
 
 export type AddBookScreenProps = BottomTabScreenProps<TabParamList, 'Add'>;
 

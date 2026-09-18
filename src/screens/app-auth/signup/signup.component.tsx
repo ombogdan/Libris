@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { Button } from '../../components/ui';
-import { signInWithGoogle } from '../../services/auth';
-import { useTheme } from '../../theme';
+import { Button } from 'shared/components/ui';
+import { signInWithGoogle } from 'services/auth';
+import { useTheme } from 'shared/theme';
 import { useStyles } from './signup.styles';
 import type { SignupScreenProps } from './signup.types';
 

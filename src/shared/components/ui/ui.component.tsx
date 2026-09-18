@@ -7,7 +7,7 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
-import { Book } from '../../data';
+import { Book } from 'shared/data';
 import { useStyles } from './ui.styles';
 
 export const price = (value: number) => (value ? `${value} ₴` : 'Даром');
@@ -119,7 +119,11 @@ export function Cover({
   return (
     <View style={[styles.cover, big && styles.coverBig, toneStyle]}>
       {book.imageUrls?.[0] ? (
-        <Image source={{ uri: book.imageUrls[0] }} style={styles.coverImage} />
+        <Image
+          source={{ uri: book.imageUrls[0] }}
+          resizeMode="cover"
+          style={styles.coverImage}
+        />
       ) : (
         <Text style={[styles.coverText, toneTextStyle]}>
           {book.title

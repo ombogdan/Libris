@@ -1,13 +1,17 @@
 import React from 'react';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabBarButtonProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
+import { PlatformPressable } from '@react-navigation/elements';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '../auth/AuthProvider';
-import { t } from '../localization/i18n';
+import { useAuth } from 'providers/auth/AuthProvider';
+import { t } from 'shared/localization/i18n';
 import {
   AddBookScreen,
   BookScreen,
@@ -20,10 +24,10 @@ import {
   SignupScreen,
   ThreadScreen,
   WelcomeScreen,
-} from '../screens';
-import { useTheme } from '../theme';
+} from 'screens';
+import { useTheme } from 'shared/theme';
 import { useStyles } from './RootNavigator.styles';
-import type { RootStackParamList, TabParamList } from './types';
+import type { RootStackParamList, TabParamList } from 'types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -69,6 +73,26 @@ const tabIconRenderers: {
   Profile: props => <TabIcon {...props} routeName="Profile" />,
 };
 
+function TabBarButton(props: BottomTabBarButtonProps) {
+  const styles = useStyles();
+  const isFocused = Boolean(props.accessibilityState?.selected);
+
+  return (
+    <PlatformPressable
+      {...props}
+      style={[
+        props.style,
+        styles.tabButton,
+        isFocused && styles.tabButtonActive,
+      ]}
+    />
+  );
+}
+
+const renderTabBarButton = (props: BottomTabBarButtonProps) => (
+  <TabBarButton {...props} />
+);
+
 function Tabs() {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
@@ -89,9 +113,9 @@ function Tabs() {
         tabBarInactiveTintColor: theme.palette.neutral600,
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabItem,
-        tabBarActiveBackgroundColor: theme.palette.accent100,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: tabIconRenderers[route.name],
+        tabBarButton: renderTabBarButton,
       })}
     >
       <Tab.Screen

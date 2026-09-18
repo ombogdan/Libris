@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { Cover, PricePill } from '../../../../components/ui';
+import { Cover, PricePill } from 'shared/components/ui';
 import { useStyles } from './listing-item.styles';
 import type { ListingItemProps } from './listing-item.types';
 

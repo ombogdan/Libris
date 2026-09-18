@@ -1,4 +1,4 @@
-import type { LocalBookImage } from '../../../../services/books';
+import type { LocalBookImage } from 'services/books';
 
 export type BookImagesPickerProps = {
   images: LocalBookImage[];

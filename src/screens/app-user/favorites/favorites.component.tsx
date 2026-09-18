@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
-import { BookRow, Button, Empty, ScreenTitle } from '../../components/ui';
-import { useAppStore } from '../../store/AppStore';
+import { BookRow, Button, Empty, ScreenTitle } from 'shared/components/ui';
+import { useAppStore } from 'store/AppStore';
 import { useStyles } from './favorites.styles';
 import type { FavoritesScreenProps } from './favorites.types';
 
