@@ -82,6 +82,35 @@ export type ListingSellerProfile = {
   review_count: number;
 };
 
+export type PublicUserProfile = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  city: string | null;
+  created_at: string;
+  listings_count: number;
+  rating_average: number;
+  review_count: number;
+};
+
+export type PublicUserListing = Pick<
+  BookListing,
+  | 'id'
+  | 'seller_id'
+  | 'title'
+  | 'author'
+  | 'price'
+  | 'category'
+  | 'condition'
+  | 'description'
+  | 'city'
+  | 'latitude'
+  | 'longitude'
+  | 'cover_url'
+  | 'image_urls'
+  | 'created_at'
+>;
+
 export type ChatConversationSummary = {
   conversation_id: string;
   listing_id: string | null;
@@ -297,6 +326,14 @@ export type Database = {
       };
     };
     Functions: {
+      get_public_user_profile: {
+        Args: { p_user_id: string };
+        Returns: PublicUserProfile[];
+      };
+      get_public_user_listings: {
+        Args: { p_user_id: string };
+        Returns: PublicUserListing[];
+      };
       get_chat_other_participant_profile: {
         Args: { p_conversation_id: string };
         Returns: Array<Pick<Profile, 'id' | 'display_name' | 'avatar_url'>>;

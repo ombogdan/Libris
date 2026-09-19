@@ -26,6 +26,7 @@ import {
   SignupScreen,
   ThreadScreen,
   UserReviewsScreen,
+  UserProfileScreen,
   WelcomeScreen,
 } from 'screens';
 import { useTheme } from 'shared/theme';
@@ -213,6 +214,7 @@ export function RootNavigator() {
             <Stack.Screen name="MyListings" component={MyListingsScreen} />
             <Stack.Screen name="EditListing" component={EditListingScreen} />
             <Stack.Screen name="UserReviews" component={UserReviewsScreen} />
+            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
           </>
         )}
       </Stack.Navigator>

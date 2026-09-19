@@ -43,7 +43,9 @@ export const useStyles = createStyles(
         backgroundColor: theme.palette.violet300,
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
       },
+      avatarImage: { width: '100%', height: '100%' },
       avatarText: {
         fontSize: scale(18),
         fontWeight: '800',

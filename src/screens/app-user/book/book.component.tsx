@@ -1,6 +1,6 @@
 import { formatReviewsCount, t, translateCondition } from 'shared/localization/i18n';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button,
@@ -73,7 +73,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           disabled={!book.sellerId}
           onPress={() => {
             if (book.sellerId) {
-              navigation.navigate('UserReviews', {
+              navigation.navigate('UserProfile', {
                 userId: book.sellerId,
                 displayName: book.seller,
               });
@@ -85,7 +85,14 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           ]}
         >
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{book.seller[0]}</Text>
+            {book.sellerAvatarUrl ? (
+              <Image
+                source={{ uri: book.sellerAvatarUrl }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Text style={styles.avatarText}>{book.seller[0]}</Text>
+            )}
           </View>
           <View style={styles.sellerInfo}>
             <Text style={styles.sellerName}>{book.seller}</Text>

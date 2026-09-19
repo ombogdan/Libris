@@ -248,6 +248,20 @@ export default {
     updateError: 'Не вдалося оновити відгуки',
     empty: 'У цього користувача ще немає відгуків.',
   },
+  userProfile: {
+    title: 'Профіль користувача',
+    loading: 'Завантажуємо профіль…',
+    loadError:
+      'Не вдалося завантажити профіль. Перевір з’єднання та спробуй ще раз.',
+    memberSince: 'на Libris з {{year}} року',
+    rating: 'рейтинг',
+    reviews: 'відгуки',
+    listings: 'оголошення',
+    recentReviews: 'Останні відгуки',
+    allReviews: 'Усі відгуки',
+    activeListings: 'Активні оголошення',
+    noListings: 'У цього користувача зараз немає активних оголошень.',
+  },
   profile: {
     title: 'Профіль',
     listings: 'оголошення',

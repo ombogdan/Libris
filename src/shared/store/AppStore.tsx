@@ -219,6 +219,7 @@ function toFeedBook(row: FeedListingRow): Book {
       ? [row.cover_url]
       : [],
     sellerId: row.seller_id,
+    sellerAvatarUrl: row.seller_avatar_url,
     status: 'active',
     createdAt: row.created_at,
     distanceKm: row.distance_km,
@@ -689,6 +690,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           ? [row.cover_url]
           : [],
         sellerId: row.seller_id,
+        sellerAvatarUrl: sellerProfile?.avatar_url ?? null,
         status: row.status,
         createdAt: row.created_at,
       };

@@ -18,6 +18,7 @@ export type Book = {
   about: string;
   imageUrls?: string[];
   sellerId?: string;
+  sellerAvatarUrl?: string | null;
   status?: 'active' | 'sold' | 'hidden';
   createdAt?: string;
   distanceKm?: number | null;

@@ -10,4 +10,5 @@ export { ProfileScreen } from './app-user/profile';
 export { SignupScreen } from './app-auth/signup';
 export { ThreadScreen } from './app-user/thread';
 export { UserReviewsScreen } from './app-user/user-reviews';
+export { UserProfileScreen } from './app-user/user-profile';
 export { WelcomeScreen } from './app-auth/welcome';

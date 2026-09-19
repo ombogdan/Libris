@@ -396,7 +396,19 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader onBack={navigation.goBack}>
-        <View style={styles.contact}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            navigation.navigate('UserProfile', {
+              userId: chat.otherUserId,
+              displayName: chat.name,
+            })
+          }
+          style={({ pressed }) => [
+            styles.contact,
+            pressed && styles.contactPressed,
+          ]}
+        >
           <View style={styles.avatar}>
             {chat.avatarUrl ? (
               <Image
@@ -415,7 +427,8 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
               {chat.about}
             </Text>
           </View>
-        </View>
+          <Text style={styles.contactArrow}>›</Text>
+        </Pressable>
       </ScreenHeader>
 
       <ReviewBanner

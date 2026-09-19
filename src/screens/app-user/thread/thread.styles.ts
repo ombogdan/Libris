@@ -21,6 +21,12 @@ export const useStyles = createStyles(
         alignItems: 'center',
         gap: scale(10),
       },
+      contactPressed: { opacity: 0.72 },
+      contactArrow: {
+        color: theme.palette.neutral500,
+        fontSize: scale(24),
+        lineHeight: scale(28),
+      },
       contactDetails: {
         flex: 1,
         gap: scale(2),

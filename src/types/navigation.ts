@@ -10,6 +10,7 @@ export type RootStackParamList = {
   MyListings: undefined;
   EditListing: { bookId: string };
   UserReviews: { userId: string; displayName?: string };
+  UserProfile: { userId: string; displayName?: string };
 };
 export type TabParamList = {
   Feed: undefined;
