@@ -7,13 +7,14 @@ import {
   Image,
   Pressable,
   RefreshControl,
+  Share,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BookRow, Button, ScreenHeader } from 'shared/components/ui';
-import { ReportModal } from 'shared/components/report-modal';
+import { ReportModal, useReportFlow } from 'shared/components/report-modal';
 import type { Book } from 'shared/data';
 import { formatListingsCount, formatRating, t } from 'shared/localization/i18n';
 import {
@@ -21,12 +22,12 @@ import {
   fetchPublicUserProfile,
 } from 'services/profiles';
 import { fetchUserReviews } from 'services/reviews';
-import type { ReportReason } from 'services/moderation';
 import type {
   PublicUserProfile,
   UserReviewDetail,
 } from 'services/supabase/database.types';
 import { useAuth } from 'providers/auth/AuthProvider';
+import { publicLinks } from 'configs/publicLinks';
 import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { ReviewItem } from '../user-reviews/components/review-item';
@@ -63,9 +64,7 @@ export function UserProfileScreen({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
-  const [reportVisible, setReportVisible] = useState(false);
-  const [reportSubmitting, setReportSubmitting] = useState(false);
-  const [reportError, setReportError] = useState<string | null>(null);
+  const report = useReportFlow({ reportedUserId: route.params.userId });
 
   const load = useCallback(
     async (refresh = false) => {
@@ -151,6 +150,18 @@ export function UserProfileScreen({
       displayName: profile?.display_name || route.params.displayName,
     });
 
+  const shareProfile = async () => {
+    const url = publicLinks.profile(route.params.userId);
+    try {
+      await Share.share({
+        message: t('userProfile.shareMessage', { name: displayName, url }),
+        url,
+      });
+    } catch {
+      store.notify(t('userProfile.shareError'));
+    }
+  };
+
   const renderListing = useCallback(
     ({ item }: { item: Book }) => (
       <BookRow
@@ -204,36 +215,6 @@ export function UserProfileScreen({
     );
   };
 
-  const submitReport = async ({
-    reason,
-    comment,
-  }: {
-    reason: ReportReason;
-    comment: string;
-  }) => {
-    setReportSubmitting(true);
-    setReportError(null);
-    try {
-      await store.reportContent({
-        reason,
-        reportedUserId: route.params.userId,
-        comment,
-      });
-      setReportVisible(false);
-      store.notify(t('report.sent'));
-    } catch (submitError) {
-      setReportError(
-        submitError &&
-          typeof submitError === 'object' &&
-          'message' in submitError
-          ? String(submitError.message)
-          : t('report.sendError'),
-      );
-    } finally {
-      setReportSubmitting(false);
-    }
-  };
-
   if (loading && !profile) {
     return (
       <View style={styles.screen}>
@@ -270,7 +251,22 @@ export function UserProfileScreen({
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t('userProfile.title')} onBack={navigation.goBack} />
+      <ScreenHeader
+        title={t('userProfile.title')}
+        onBack={navigation.goBack}
+        right={
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void shareProfile()}
+            style={({ pressed }) => [
+              styles.shareAction,
+              pressed && styles.shareActionPressed,
+            ]}
+          >
+            <Text style={styles.shareActionText}>{t('userProfile.share')}</Text>
+          </Pressable>
+        }
+      />
       <FlatList
         data={listings}
         keyExtractor={item => item.id}
@@ -349,7 +345,7 @@ export function UserProfileScreen({
                 <Button
                   danger
                   label={t('report.reportUser')}
-                  onPress={() => setReportVisible(true)}
+                  onPress={report.open}
                 />
               </View>
             ) : null}
@@ -392,13 +388,7 @@ export function UserProfileScreen({
         }
         showsVerticalScrollIndicator={false}
       />
-      <ReportModal
-        visible={reportVisible}
-        isSubmitting={reportSubmitting}
-        error={reportError}
-        onClose={() => setReportVisible(false)}
-        onSubmit={payload => void submitReport(payload)}
-      />
+      <ReportModal {...report.modalProps} />
     </View>
   );
 }

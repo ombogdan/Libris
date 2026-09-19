@@ -14,4 +14,5 @@ export const env = {
   supabaseUrl: required('SUPABASE_URL'),
   supabasePublishableKey: required('SUPABASE_PUBLISHABLE_KEY'),
   googleWebClientId: Config.GOOGLE_WEB_CLIENT_ID?.trim() ?? '',
+  publicWebUrl: Config.PUBLIC_WEB_URL?.trim() ?? '',
 } as const;

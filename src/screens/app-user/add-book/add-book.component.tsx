@@ -20,9 +20,17 @@ import {
 import { useAuth } from 'providers/auth/AuthProvider';
 import { useAppStore } from 'store/AppStore';
 import { getCityCenter, getUserLocation } from 'services/location';
+import { getFriendlyErrorMessage } from 'services/moderation';
+import {
+  clearListingDraft,
+  loadListingDraft,
+  saveListingDraft,
+} from 'services/storage/listingDraft';
 import { BookImagesPicker } from './components/book-images-picker';
 import { useStyles } from './add-book.styles';
 import type { AddBookForm, AddBookScreenProps } from './add-book.types';
+
+const CONDITIONS = ['Як нова', 'Добрий', 'Читана'];
 
 const emptyForm: AddBookForm = {
   title: '',
@@ -39,17 +47,50 @@ const emptyForm: AddBookForm = {
   images: [],
 };
 
+const oneOf = (value: string | undefined, allowed: readonly string[]) =>
+  value !== undefined && allowed.includes(value) ? value : undefined;
+
+// The saved text of an unfinished listing, if there is one for this user.
+function restoreForm(userId?: string): AddBookForm {
+  const draft = userId ? loadListingDraft(userId) : null;
+
+  if (!draft) {
+    return emptyForm;
+  }
+
+  return {
+    ...emptyForm,
+    title: draft.title ?? '',
+    author: draft.author ?? '',
+    price: draft.price ?? '',
+    about: draft.about ?? '',
+    free: draft.free ?? false,
+    city: draft.city ?? '',
+    condition: oneOf(draft.condition, CONDITIONS) ?? emptyForm.condition,
+    category: oneOf(draft.category, BOOK_CATEGORIES) ?? emptyForm.category,
+    language: oneOf(draft.language, BOOK_LANGUAGES) ?? emptyForm.language,
+  };
+}
+
 export function AddBookScreen({ navigation }: AddBookScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const common = useCommonStyles();
   const store = useAppStore();
-  const { profile } = useAuth();
-  const [form, setForm] = useState(emptyForm);
+  const { session, profile } = useAuth();
+  const userId = session?.user.id;
+  const [form, setForm] = useState<AddBookForm>(() => restoreForm(userId));
   const [error, setError] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const cityEdited = useRef(false);
+  // A city that came back with the draft was typed by the user; keep it.
+  const cityEdited = useRef(Boolean(form.city));
+
+  useEffect(() => {
+    if (userId) {
+      saveListingDraft(userId, form);
+    }
+  }, [form, userId]);
 
   const set = <Key extends keyof AddBookForm>(
     key: Key,
@@ -122,6 +163,9 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
         latitude: cityCenter.latitude,
         longitude: cityCenter.longitude,
       });
+      if (userId) {
+        clearListingDraft(userId);
+      }
       store.notify(t('listingForm.published'));
       cityEdited.current = false;
       setForm({
@@ -133,11 +177,7 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
       navigation.navigate('Feed');
     } catch (publishError) {
       setError(
-        publishError &&
-          typeof publishError === 'object' &&
-          'message' in publishError
-          ? String(publishError.message)
-          : t('listingForm.publishError'),
+        getFriendlyErrorMessage(publishError, t('listingForm.publishError')),
       );
     } finally {
       setIsPublishing(false);
@@ -199,7 +239,7 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
         </View>
         <Text style={styles.label}>{t('listingForm.condition')}</Text>
         <View style={styles.chips}>
-          {['Як нова', 'Добрий', 'Читана'].map(condition => (
+          {CONDITIONS.map(condition => (
             <Chip
               key={condition}
               label={translateCondition(condition)}

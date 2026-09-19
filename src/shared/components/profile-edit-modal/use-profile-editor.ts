@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { useAuth } from 'providers/auth/AuthProvider';
 import { getCityCenter } from 'services/location';
+import { getFriendlyErrorMessage } from 'services/moderation';
 import { t } from 'shared/localization/i18n';
 import type {
   EditableProfileField,
@@ -82,11 +83,7 @@ export function useProfileEditor() {
 
       setField(null);
     } catch (saveError) {
-      setError(
-        saveError && typeof saveError === 'object' && 'message' in saveError
-          ? String(saveError.message)
-          : t('profile.updateError'),
-      );
+      setError(getFriendlyErrorMessage(saveError, t('profile.updateError')));
     } finally {
       setIsSaving(false);
     }

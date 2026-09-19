@@ -24,6 +24,16 @@
 				<string>com.googleusercontent.apps.338376461945-l3bp4id7ie0lovog8uel8qjt3sn3o156</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.libris.links</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>libris</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>

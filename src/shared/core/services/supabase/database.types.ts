@@ -113,6 +113,29 @@ export type PublicUserListing = Pick<
   | 'created_at'
 >;
 
+export type PublicBookListing = {
+  id: string;
+  seller_id: string;
+  title: string;
+  author: string;
+  price: number;
+  category: string;
+  condition: string;
+  description: string;
+  city: string;
+  latitude: number | null;
+  longitude: number | null;
+  cover_url: string | null;
+  image_urls: string[];
+  created_at: string;
+  seller_display_name: string;
+  seller_avatar_url: string | null;
+  seller_listings_count: number;
+  seller_rating_average: number;
+  seller_review_count: number;
+  distance_km: number | null;
+};
+
 export type ChatConversationSummary = {
   conversation_id: string;
   listing_id: string | null;
@@ -381,6 +404,10 @@ export type Database = {
       };
     };
     Functions: {
+      get_public_book_listing: {
+        Args: { p_listing_id: string };
+        Returns: PublicBookListing[];
+      };
       get_public_user_profile: {
         Args: { p_user_id: string };
         Returns: PublicUserProfile[];

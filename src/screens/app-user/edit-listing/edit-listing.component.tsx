@@ -27,6 +27,7 @@ import type {
   EditListingForm,
   EditListingScreenProps,
 } from './edit-listing.types';
+import { getFriendlyErrorMessage } from 'services/moderation';
 
 const emptyForm: EditListingForm = {
   title: '',
@@ -171,9 +172,7 @@ export function EditListingScreen({
       navigation.goBack();
     } catch (saveError) {
       setError(
-        saveError && typeof saveError === 'object' && 'message' in saveError
-          ? String(saveError.message)
-          : t('listingForm.updateError'),
+        getFriendlyErrorMessage(saveError, t('listingForm.updateError')),
       );
     } finally {
       setIsSaving(false);

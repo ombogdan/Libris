@@ -32,6 +32,17 @@ export const useStyles = createStyles(
         lineHeight: scale(21),
         textAlign: 'center',
       },
+      shareAction: {
+        minHeight: scale(40),
+        justifyContent: 'center',
+        paddingHorizontal: scale(8),
+      },
+      shareActionPressed: { opacity: 0.6 },
+      shareActionText: {
+        color: theme.palette.accent700,
+        fontSize: scale(14),
+        fontWeight: '800',
+      },
       profileCard: {
         alignItems: 'center',
         padding: scale(20),

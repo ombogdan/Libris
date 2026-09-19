@@ -1,5 +1,6 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from 'services/supabase';
+import { clearAllListingDrafts } from 'services/storage/listingDraft';
 
 // The Edge Function removes the user's files and the auth user; the profile,
 // listings, chats and the rest cascade from it in the database.
@@ -14,6 +15,7 @@ export async function deleteAccount() {
 
   // The account is gone, so only clean up this device. A global sign-out would
   // ask the server about a user that no longer exists.
+  clearAllListingDrafts();
   await Promise.allSettled([GoogleSignin.revokeAccess()]);
   await Promise.allSettled([
     GoogleSignin.signOut(),

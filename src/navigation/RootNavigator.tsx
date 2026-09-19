@@ -32,6 +32,7 @@ import {
   WelcomeScreen,
 } from 'screens';
 import { useTheme } from 'shared/theme';
+import { linking } from './linking';
 import { useStyles } from './RootNavigator.styles';
 import type { RootStackParamList, TabParamList } from 'types/navigation';
 
@@ -187,6 +188,7 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer
+      linking={linking}
       theme={{
         ...DefaultTheme,
         colors: {

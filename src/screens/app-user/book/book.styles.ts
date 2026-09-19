@@ -12,7 +12,28 @@ export const useStyles = createStyles(
         paddingTop: scale(16),
         paddingBottom: scale(24) + bottomInset,
       },
-      missing: { flex: 1, justifyContent: 'center', padding: scale(18) },
+      missing: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: scale(18),
+        gap: scale(12),
+      },
+      stateText: {
+        textAlign: 'center',
+        fontSize: scale(14),
+        color: theme.palette.neutral600,
+      },
+      shareAction: {
+        minHeight: scale(40),
+        justifyContent: 'center',
+        paddingHorizontal: scale(8),
+      },
+      shareActionPressed: { opacity: 0.6 },
+      shareActionText: {
+        color: theme.palette.accent700,
+        fontSize: scale(14),
+        fontWeight: '800',
+      },
       title: {
         fontSize: scale(28),
         lineHeight: scale(31),
@@ -20,7 +41,12 @@ export const useStyles = createStyles(
         letterSpacing: scale(-0.7),
         color: theme.palette.text,
       },
-      byline: { gap: scale(3) },
+      details: {
+        backgroundColor: theme.palette.white,
+        borderRadius: scale(20),
+        paddingHorizontal: scale(14),
+        overflow: 'hidden',
+      },
       author: { fontSize: scale(14), color: theme.palette.neutral600 },
       seller: {
         backgroundColor: theme.palette.white,

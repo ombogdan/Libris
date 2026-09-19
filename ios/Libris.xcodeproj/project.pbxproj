@@ -21,6 +21,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Libris/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Libris/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Libris/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C4D5E6F708192A3B4C5D6E7F /* Libris.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Libris.entitlements; path = Libris/Libris.entitlements; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-Libris.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Libris.debug.xcconfig"; path = "Target Support Files/Pods-Libris/Pods-Libris.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Libris.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Libris.release.xcconfig"; path = "Target Support Files/Pods-Libris/Pods-Libris.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Libris.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Libris.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -53,6 +54,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				C4D5E6F708192A3B4C5D6E7F /* Libris.entitlements */,
 			);
 			name = Libris;
 			sourceTree = "<group>";
@@ -268,6 +270,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_ENTITLEMENTS = Libris/Libris.entitlements;
 				DEVELOPMENT_TEAM = 7PV95S6WYK;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Libris/Info.plist;
@@ -299,6 +302,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_ENTITLEMENTS = Libris/Libris.entitlements;
 				DEVELOPMENT_TEAM = 7PV95S6WYK;
 				INFOPLIST_FILE = Libris/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;

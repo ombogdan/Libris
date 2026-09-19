@@ -90,7 +90,6 @@ export default {
     priceError: 'Enter a valid price or choose “Give away”.',
     cityNotFound: 'Could not find this city. Check the name.',
     published: 'Listing published',
-    similar: 'Similar books',
     publishError: 'Could not publish the book.',
     updated: 'Listing updated',
     updateError: 'Could not update the listing.',
@@ -173,12 +172,26 @@ export default {
   },
   book: {
     title: 'Listing',
-    published: 'Published {{date}}',
+    details: {
+      category: 'Category',
+      language: 'Book language',
+      published: 'Published',
+    },
+    safety: {
+      title: 'Stay safe',
+      text: 'Meet in a public place and check the book before you pay. Don’t send money in advance to strangers or follow suspicious links.',
+    },
+    similar: 'Similar books',
     noReviews: 'no reviews',
     ownListing: 'This is your listing',
     openingChat: 'Opening chat…',
     messageSeller: 'Message seller',
     openChatError: 'Could not open the chat.',
+    loading: 'Loading listing…',
+    loadError: 'Could not load the listing.',
+    share: 'Share',
+    shareMessage: '“{{title}}” on Libris\n{{url}}',
+    shareError: 'Could not share the listing.',
   },
   chats: {
     title: 'Chats',
@@ -252,7 +265,8 @@ export default {
   userProfile: {
     title: 'User profile',
     loading: 'Loading profile…',
-    loadError: 'Could not load the profile. Check your connection and try again.',
+    loadError:
+      'Could not load the profile. Check your connection and try again.',
     memberSince: 'on Libris since {{year}}',
     rating: 'rating',
     reviews: 'reviews',
@@ -261,6 +275,9 @@ export default {
     allReviews: 'All reviews',
     activeListings: 'Active listings',
     noListings: 'This user has no active listings right now.',
+    share: 'Share',
+    shareMessage: '{{name}} on Libris\n{{url}}',
+    shareError: 'Could not share the profile.',
   },
   profile: {
     title: 'Profile',
@@ -372,6 +389,20 @@ export default {
   },
   moderation: {
     menuTitle: 'Actions',
+    viewProfile: 'View profile',
+    contentNotAllowed:
+      'The text contains words that are not allowed by the app rules. Please edit it and try again.',
+    contentNotAllowedField:
+      'The “{{field}}” field contains words that are not allowed by the app rules. Please edit the text and try again.',
+    messageNotAllowed:
+      'Message not sent: it contains words that are not allowed by the app rules.',
+    fields: {
+      title: 'Title',
+      author: 'Author',
+      description: 'Description',
+      displayName: 'Name',
+      comment: 'Review',
+    },
     menuCancel: 'Cancel',
     blockAction: 'Block user',
     blockConfirmTitle: 'Block {{name}}?',
@@ -406,6 +437,14 @@ export default {
     },
     privacy: {
       title: 'Privacy',
+    },
+    legal: {
+      title: 'Help and legal',
+      support: 'Support and feedback',
+      privacy: 'Privacy Policy',
+      terms: 'Terms and Conditions',
+      dataControls: 'Data controls and deletion',
+      openError: 'Could not open the page.',
     },
     account: {
       title: 'Account',

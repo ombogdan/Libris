@@ -13,6 +13,7 @@ import { useAuth } from 'providers/auth/AuthProvider';
 import { supabase } from 'services/supabase';
 import { getUserLocation, UserLocation } from 'services/location';
 import { signOutFromGoogle } from 'services/auth';
+import { getFriendlyErrorMessage } from 'services/moderation';
 import { useTheme } from 'shared/theme';
 import { useStyles } from './complete-profile.styles';
 
@@ -74,7 +75,7 @@ export function CompleteProfileScreen() {
     });
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getFriendlyErrorMessage(saveError, t('profile.updateError')));
       setIsSaving(false);
       return;
     }

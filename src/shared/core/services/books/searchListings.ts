@@ -1,4 +1,5 @@
 import { supabase } from 'services/supabase';
+import type { PublicBookListing } from 'services/supabase/database.types';
 
 export type FeedSort = 'recent' | 'price_asc' | 'price_desc' | 'distance';
 
@@ -16,28 +17,7 @@ export type FeedFilters = {
   sort: FeedSort;
 };
 
-export type FeedListingRow = {
-  id: string;
-  seller_id: string;
-  title: string;
-  author: string;
-  price: number;
-  category: string;
-  condition: string;
-  description: string;
-  city: string;
-  latitude: number | null;
-  longitude: number | null;
-  cover_url: string | null;
-  image_urls: string[];
-  created_at: string;
-  seller_display_name: string;
-  seller_avatar_url: string | null;
-  seller_listings_count: number;
-  seller_rating_average: number;
-  seller_review_count: number;
-  distance_km: number | null;
-};
+export type FeedListingRow = PublicBookListing;
 
 const PAGE_SIZE = 20;
 

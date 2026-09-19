@@ -61,6 +61,10 @@ import {
   reportContent as reportContentRequest,
   unblockUser as unblockUserRequest,
 } from 'services/moderation';
+import {
+  getFriendlyErrorMessage,
+  isContentNotAllowedError,
+} from 'services/moderation';
 import type { ReportReason } from 'services/moderation';
 
 type AddForm = {
@@ -122,7 +126,8 @@ type Store = {
     options?: { refresh?: boolean; silent?: boolean },
   ) => Promise<void>;
   loadOlderMessages: (chatId: string) => Promise<void>;
-  send: (chatId: string, text: string) => Promise<void>;
+  // Resolves to false when the text was rejected by moderation, so the caller can put it back into the composer.
+  send: (chatId: string, text: string) => Promise<boolean>;
   retryMessage: (chatId: string, messageId: string) => Promise<void>;
   submitReview: (
     chatId: string,
@@ -1284,19 +1289,36 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         );
         void reloadChats({ silent: true });
       } catch (error) {
+        const rejected = isContentNotAllowedError(error);
+
         updateChats(current =>
-          current.map(chat =>
-            chat.id === chatId
-              ? {
-                  ...chat,
-                  msgs: chat.msgs.map(message =>
-                    message.id === localId
-                      ? { ...message, status: 'failed' }
-                      : message,
-                  ),
-                }
-              : chat,
-          ),
+          current.map(chat => {
+            if (chat.id !== chatId) {
+              return chat;
+            }
+
+            if (rejected) {
+              // Retrying the same text cannot work, so the local copy goes away
+              // and the preview falls back to the previous message.
+              const msgs = chat.msgs.filter(message => message.id !== localId);
+              const previous = msgs.at(-1);
+              return {
+                ...chat,
+                msgs,
+                lastMessage: previous?.text ?? '',
+                lastMessageAt: previous?.createdAt ?? null,
+              };
+            }
+
+            return {
+              ...chat,
+              msgs: chat.msgs.map(message =>
+                message.id === localId
+                  ? { ...message, status: 'failed' }
+                  : message,
+              ),
+            };
+          }),
         );
         throw error;
       }
@@ -1305,11 +1327,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   const send = useCallback(
-    async (chatId: string, value: string) => {
+    async (chatId: string, value: string): Promise<boolean> => {
       const text = value.trim();
       const userId = session?.user.id;
       if (!text || !userId) {
-        return;
+        return true;
       }
 
       const localId = `local-${userId}-${Date.now()}-${Math.random()
@@ -1343,11 +1365,19 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
 
       try {
         await persistMessage(chatId, localId, text);
-      } catch {
+      } catch (error) {
+        if (isContentNotAllowedError(error)) {
+          notify(getFriendlyErrorMessage(error, t('store.sendError')));
+          void reloadChats({ silent: true });
+          return false;
+        }
+
         notify(t('store.sendError'));
       }
+
+      return true;
     },
-    [notify, persistMessage, session?.user.id, updateChats],
+    [notify, persistMessage, reloadChats, session?.user.id, updateChats],
   );
 
   const retryMessage = useCallback(
@@ -1376,8 +1406,12 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
 
       try {
         await persistMessage(chatId, messageId, message.text);
-      } catch {
-        notify(t('store.resendError'));
+      } catch (error) {
+        notify(
+          isContentNotAllowedError(error)
+            ? getFriendlyErrorMessage(error, t('store.resendError'))
+            : t('store.resendError'),
+        );
       }
     },
     [notify, persistMessage, updateChats],

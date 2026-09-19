@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -13,6 +13,7 @@ import { setLocalePreference, t, useLocale } from 'shared/localization/i18n';
 import type { LocalePreference } from 'shared/localization/i18n';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { deleteAccount } from 'services/auth';
+import { publicLinks } from 'configs/publicLinks';
 import { useAppStore } from 'store/AppStore';
 import { DeleteAccountModal } from './components/delete-account-modal';
 import { SettingsSection } from './components/settings-section';
@@ -46,6 +47,14 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     if (!isDeleting) {
       setDeleteVisible(false);
       setDeleteError(null);
+    }
+  };
+
+  const openPublicPage = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      store.notify(t('settings.legal.openError'));
     }
   };
 
@@ -111,6 +120,26 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             label={t('moderation.blockedUsersTitle')}
             value={String(store.blockedUserIds.length)}
             onPress={() => navigation.navigate('BlockedUsers')}
+            isLast
+          />
+        </SettingsSection>
+
+        <SettingsSection title={t('settings.legal.title')}>
+          <ListRow
+            label={t('settings.legal.support')}
+            onPress={() => void openPublicPage(publicLinks.support)}
+          />
+          <ListRow
+            label={t('settings.legal.privacy')}
+            onPress={() => void openPublicPage(publicLinks.privacy)}
+          />
+          <ListRow
+            label={t('settings.legal.terms')}
+            onPress={() => void openPublicPage(publicLinks.terms)}
+          />
+          <ListRow
+            label={t('settings.legal.dataControls')}
+            onPress={() => void openPublicPage(publicLinks.privacyChoices)}
             isLast
           />
         </SettingsSection>

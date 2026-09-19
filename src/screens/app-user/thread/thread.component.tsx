@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Keyboard,
@@ -16,6 +17,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -28,7 +30,11 @@ import type {
   NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import { getFriendlyErrorMessage } from 'services/moderation';
+import { ListRow } from 'shared/components/list-row';
+import { ReportModal, useReportFlow } from 'shared/components/report-modal';
 import { Button, Chip, Empty, ScreenHeader } from 'shared/components/ui';
 import type { Message } from 'shared/data';
 import { useTheme } from 'shared/theme';
@@ -76,6 +82,9 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   const [reviewVisible, setReviewVisible] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const report = useReportFlow({ reportedUserId: chat?.otherUserId });
 
   const lastMessageId = chat?.msgs.at(-1)?.id;
   const initial = chat?.name.trim().charAt(0).toUpperCase() || '?';
@@ -257,7 +266,15 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
     setDraft('');
     nearBottom.current = true;
-    void sendMessage(activeChatId, text).catch(() => undefined);
+    void sendMessage(activeChatId, text)
+      .then(accepted => {
+        // A rejected text goes back so it can be edited, unless the user has
+        // already started typing something else.
+        if (!accepted) {
+          setDraft(current => current || text);
+        }
+      })
+      .catch(() => undefined);
   }, [activeChatId, draft, isDeleted, sendMessage]);
 
   const submitReview = useCallback(
@@ -276,9 +293,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         })
         .catch(error => {
           setReviewError(
-            error && typeof error === 'object' && 'message' in error
-              ? String(error.message)
-              : t('reviews.publishError'),
+            getFriendlyErrorMessage(error, t('reviews.publishError')),
           );
         })
         .finally(() => setReviewSubmitting(false));
@@ -388,6 +403,46 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
     );
   }
 
+  const openContactProfile = () =>
+    navigation.navigate('UserProfile', {
+      userId: chat.otherUserId,
+      displayName: chat.name,
+    });
+
+  const blockContact = async () => {
+    try {
+      await app.blockUser(chat.otherUserId);
+      app.notify(t('moderation.blocked', { name: chat.name }));
+      navigation.goBack();
+    } catch (blockError) {
+      app.notify(
+        blockError && typeof blockError === 'object' && 'message' in blockError
+          ? String(blockError.message)
+          : t('moderation.blockError'),
+      );
+    }
+  };
+
+  const confirmBlockContact = () => {
+    Alert.alert(
+      t('moderation.blockConfirmTitle', { name: chat.name }),
+      t('moderation.blockConfirmText'),
+      [
+        { text: t('moderation.menuCancel'), style: 'cancel' },
+        {
+          text: t('moderation.blockConfirm'),
+          style: 'destructive',
+          onPress: () => void blockContact(),
+        },
+      ],
+    );
+  };
+
+  const runMenuAction = (action: () => void) => () => {
+    setMenuVisible(false);
+    action();
+  };
+
   const initialLoading =
     chat.messagesLoading && !chat.messagesLoaded && !chat.msgs.length;
   const initialError =
@@ -395,41 +450,58 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader onBack={navigation.goBack}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() =>
-            navigation.navigate('UserProfile', {
-              userId: chat.otherUserId,
-              displayName: chat.name,
-            })
-          }
-          style={({ pressed }) => [
-            styles.contact,
-            pressed && styles.contactPressed,
-          ]}
-        >
-          <View style={styles.avatar}>
-            {chat.avatarUrl ? (
-              <Image
-                source={{ uri: chat.avatarUrl }}
-                style={styles.avatarImage}
+      <View
+        onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
+        <ScreenHeader onBack={navigation.goBack}>
+          <View style={styles.headerRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={openContactProfile}
+              style={({ pressed }) => [
+                styles.contact,
+                pressed && styles.contactPressed,
+              ]}
+            >
+              <View style={styles.avatar}>
+                {chat.avatarUrl ? (
+                  <Image
+                    source={{ uri: chat.avatarUrl }}
+                    style={styles.avatarImage}
+                  />
+                ) : (
+                  <Text style={styles.avatarText}>{initial}</Text>
+                )}
+              </View>
+              <View style={styles.contactDetails}>
+                <Text numberOfLines={1} style={styles.name}>
+                  {chat.name}
+                </Text>
+                <Text numberOfLines={1} style={styles.topic}>
+                  {chat.about}
+                </Text>
+              </View>
+              <Text style={styles.contactArrow}>›</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('moderation.menuTitle')}
+              hitSlop={styles.menuHitSlop}
+              onPress={() => setMenuVisible(true)}
+              style={({ pressed }) => [
+                styles.menuButton,
+                pressed && styles.menuButtonPressed,
+              ]}
+            >
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={styles.menuIconSize}
+                color={styles.colors.menuIcon}
               />
-            ) : (
-              <Text style={styles.avatarText}>{initial}</Text>
-            )}
+            </Pressable>
           </View>
-          <View style={styles.contactDetails}>
-            <Text numberOfLines={1} style={styles.name}>
-              {chat.name}
-            </Text>
-            <Text numberOfLines={1} style={styles.topic}>
-              {chat.about}
-            </Text>
-          </View>
-          <Text style={styles.contactArrow}>›</Text>
-        </Pressable>
-      </ScreenHeader>
+        </ScreenHeader>
+      </View>
 
       <ReviewBanner
         listingStatus={
@@ -576,6 +648,37 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         }}
         onSubmit={submitReview}
       />
+      <ReportModal {...report.modalProps} />
+      {menuVisible ? (
+        <>
+          <Pressable
+            accessibilityLabel={t('moderation.menuCancel')}
+            onPress={() => setMenuVisible(false)}
+            style={StyleSheet.absoluteFill}
+          />
+          <View
+            style={[styles.menu, { top: headerHeight + styles.menuOffset }]}
+          >
+            <ListRow
+              label={t('moderation.viewProfile')}
+              showChevron={false}
+              onPress={runMenuAction(openContactProfile)}
+            />
+            <ListRow
+              label={t('report.reportUser')}
+              showChevron={false}
+              onPress={runMenuAction(report.open)}
+            />
+            <ListRow
+              danger
+              label={t('moderation.blockAction')}
+              showChevron={false}
+              onPress={runMenuAction(confirmBlockContact)}
+              isLast
+            />
+          </View>
+        </>
+      ) : null}
     </View>
   );
 }

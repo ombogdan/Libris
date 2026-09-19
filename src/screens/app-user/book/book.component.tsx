@@ -2,10 +2,20 @@ import {
   formatDate,
   formatReviewsCount,
   t,
+  translateCategory,
   translateCondition,
+  translateLanguage,
 } from 'shared/localization/i18n';
-import React, { useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  Share,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button,
@@ -15,11 +25,16 @@ import {
   ScreenHeader,
   useCommonStyles,
 } from 'shared/components/ui';
-import { ReportModal } from 'shared/components/report-modal';
-import type { ReportReason } from 'services/moderation';
+import { ListRow } from 'shared/components/list-row';
+import { ReportModal, useReportFlow } from 'shared/components/report-modal';
 import { useAuth } from 'providers/auth/AuthProvider';
+import { publicLinks } from 'configs/publicLinks';
+import { fetchPublicBookListing } from 'services/books';
+import type { Book } from 'shared/data';
+import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
+import { SafetyTip } from './components/safety-tip';
 import { SimilarBooks } from './components/similar-books';
 import { useStyles } from './book.styles';
 import type { BookScreenProps } from './book.types';
@@ -28,43 +43,54 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const common = useCommonStyles();
+  const { theme } = useTheme();
   const store = useAppStore();
   const { session } = useAuth();
   const [isOpeningChat, setIsOpeningChat] = useState(false);
-  const [reportVisible, setReportVisible] = useState(false);
-  const [reportSubmitting, setReportSubmitting] = useState(false);
-  const [reportError, setReportError] = useState<string | null>(null);
-  const book = store.books.find(item => item.id === route.params.bookId);
+  const storedBook = store.books.find(item => item.id === route.params.bookId);
+  const [linkedBook, setLinkedBook] = useState<Book | null>(null);
+  const [bookLoading, setBookLoading] = useState(!storedBook);
+  const [bookLoadError, setBookLoadError] = useState(false);
+  const book = storedBook ?? linkedBook;
   const isOwnListing = book?.sellerId === session?.user.id;
-  const publishedAt = book?.createdAt ? formatDate(book.createdAt) : '';
+  const report = useReportFlow({ listingId: book?.id });
 
-  const submitReport = async ({
-    reason,
-    comment,
-  }: {
-    reason: ReportReason;
-    comment: string;
-  }) => {
+  const loadLinkedBook = useCallback(async () => {
+    if (storedBook) {
+      setLinkedBook(null);
+      setBookLoading(false);
+      setBookLoadError(false);
+      return;
+    }
+
+    setBookLoading(true);
+    setBookLoadError(false);
+    try {
+      setLinkedBook(await fetchPublicBookListing(route.params.bookId));
+    } catch {
+      setBookLoadError(true);
+    } finally {
+      setBookLoading(false);
+    }
+  }, [route.params.bookId, storedBook]);
+
+  useEffect(() => {
+    void loadLinkedBook();
+  }, [loadLinkedBook]);
+
+  const shareBook = async () => {
     if (!book) {
       return;
     }
 
-    setReportSubmitting(true);
-    setReportError(null);
+    const url = publicLinks.book(book.id);
     try {
-      await store.reportContent({ reason, listingId: book.id, comment });
-      setReportVisible(false);
-      store.notify(t('report.sent'));
-    } catch (submitError) {
-      setReportError(
-        submitError &&
-          typeof submitError === 'object' &&
-          'message' in submitError
-          ? String(submitError.message)
-          : t('report.sendError'),
-      );
-    } finally {
-      setReportSubmitting(false);
+      await Share.share({
+        message: t('book.shareMessage', { title: book.title, url }),
+        url,
+      });
+    } catch {
+      store.notify(t('book.shareError'));
     }
   };
 
@@ -88,18 +114,69 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
     }
   };
 
-  if (!book) {
+  if (!book && bookLoading) {
     return (
-      <View style={styles.missing}>
-        <Empty text={t('listingForm.missing')} />
-        <Button label={t('common.back')} onPress={navigation.goBack} />
+      <View style={styles.screen}>
+        <ScreenHeader title={t('book.title')} onBack={navigation.goBack} />
+        <View style={styles.missing}>
+          <ActivityIndicator size="large" color={theme.palette.accent} />
+          <Text style={styles.stateText}>{t('book.loading')}</Text>
+        </View>
       </View>
     );
   }
 
+  if (!book) {
+    return (
+      <View style={styles.screen}>
+        <ScreenHeader title={t('book.title')} onBack={navigation.goBack} />
+        <View style={styles.missing}>
+          <Empty
+            text={
+              bookLoadError ? t('book.loadError') : t('listingForm.missing')
+            }
+          />
+          <Button
+            label={bookLoadError ? t('common.retry') : t('common.back')}
+            onPress={
+              bookLoadError ? () => void loadLinkedBook() : navigation.goBack
+            }
+          />
+        </View>
+      </View>
+    );
+  }
+
+  const details = [
+    [t('book.details.category'), translateCategory(book.cat)],
+    [
+      t('book.details.language'),
+      book.language ? translateLanguage(book.language) : '',
+    ],
+    [
+      t('book.details.published'),
+      book.createdAt ? formatDate(book.createdAt) : '',
+    ],
+  ].filter(([, value]) => value);
+
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t('book.title')} onBack={navigation.goBack} />
+      <ScreenHeader
+        title={t('book.title')}
+        onBack={navigation.goBack}
+        right={
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void shareBook()}
+            style={({ pressed }) => [
+              styles.shareAction,
+              pressed && styles.shareActionPressed,
+            ]}
+          >
+            <Text style={styles.shareActionText}>{t('book.share')}</Text>
+          </Pressable>
+        }
+      />
 
       <ScrollView contentContainerStyle={[common.page, styles.page]}>
         <BookGallery book={book} />
@@ -108,15 +185,20 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           <Chip label={translateCondition(book.condition)} />
         </View>
         <Text style={styles.title}>{book.title}</Text>
-        <View style={styles.byline}>
-          <Text style={styles.author}>{book.author}</Text>
-          {publishedAt ? (
-            <Text style={common.meta}>
-              {t('book.published', { date: publishedAt })}
-            </Text>
-          ) : null}
-        </View>
+        <Text style={styles.author}>{book.author}</Text>
         <Text style={common.body}>{book.about}</Text>
+        {details.length ? (
+          <View style={styles.details}>
+            {details.map(([label, value], index) => (
+              <ListRow
+                key={label}
+                label={label}
+                value={value}
+                isLast={index === details.length - 1}
+              />
+            ))}
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           disabled={!book.sellerId}
@@ -157,6 +239,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           </View>
           <Text style={styles.sellerArrow}>›</Text>
         </Pressable>
+        {!isOwnListing ? <SafetyTip /> : null}
         <Button
           label={
             isOwnListing
@@ -187,7 +270,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           <Pressable
             accessibilityRole="button"
             style={styles.reportLink}
-            onPress={() => setReportVisible(true)}
+            onPress={report.open}
           >
             <Text style={styles.reportLinkText}>
               {t('report.reportListing')}
@@ -195,13 +278,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           </Pressable>
         ) : null}
       </ScrollView>
-      <ReportModal
-        visible={reportVisible}
-        isSubmitting={reportSubmitting}
-        error={reportError}
-        onClose={() => setReportVisible(false)}
-        onSubmit={payload => void submitReport(payload)}
-      />
+      <ReportModal {...report.modalProps} />
     </View>
   );
 }

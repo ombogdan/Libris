@@ -1,4 +1,5 @@
 import UIKit
+import React
 import GoogleSignIn
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -24,7 +25,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     factory.startReactNative(
       withModuleName: "Libris",
       in: window,
-      launchOptions: nil
+      launchOptions: reactNativeLaunchOptions(from: connectionOptions)
     )
   }
 
@@ -33,6 +34,40 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       return
     }
 
-    GIDSignIn.sharedInstance.handle(url)
+    _ = GIDSignIn.sharedInstance.handle(url)
+    _ = RCTLinkingManager.application(
+      UIApplication.shared,
+      open: url,
+      options: [:]
+    )
+  }
+
+  func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    _ = RCTLinkingManager.application(
+      UIApplication.shared,
+      continue: userActivity,
+      restorationHandler: { _ in }
+    )
+  }
+
+  private func reactNativeLaunchOptions(
+    from connectionOptions: UIScene.ConnectionOptions
+  ) -> [UIApplication.LaunchOptionsKey: Any]? {
+    if let url = connectionOptions.urlContexts.first?.url {
+      return [.url: url]
+    }
+
+    if let activity = connectionOptions.userActivities.first(where: {
+      $0.activityType == NSUserActivityTypeBrowsingWeb && $0.webpageURL != nil
+    }) {
+      return [
+        .userActivityDictionary: [
+          "UIApplicationLaunchOptionsUserActivityTypeKey": activity.activityType,
+          "UIApplicationLaunchOptionsUserActivityKey": activity,
+        ],
+      ]
+    }
+
+    return nil
   }
 }
