@@ -9,9 +9,17 @@ export const useStyles = createStyles(
         flex: 1,
         backgroundColor: theme.palette.background,
       },
+      list: { flex: 1 },
       page: {
+        flexGrow: 1,
+        paddingHorizontal: scale(18),
         paddingTop: scale(16),
         paddingBottom: scale(128) + bottomInset,
+      },
+      emptyPage: { flexGrow: 1 },
+      header: {
+        gap: scale(13),
+        marginBottom: scale(13),
       },
       search: {
         height: scale(48),
@@ -23,8 +31,18 @@ export const useStyles = createStyles(
         borderWidth: scale(1),
         borderColor: theme.palette.divider,
       },
-      chips: { gap: scale(8) },
-      loading: { paddingVertical: scale(48) },
+      chips: {
+        gap: scale(8),
+        paddingRight: scale(18),
+      },
+      separator: { height: scale(13) },
+      loading: {
+        flex: 1,
+        minHeight: scale(180),
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      loadingMore: { paddingVertical: scale(20) },
     }),
     colors: { placeholder: theme.palette.neutral500 },
   }),

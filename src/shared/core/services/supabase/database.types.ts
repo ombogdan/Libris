@@ -23,6 +23,7 @@ export type BookListing = {
   price: number;
   category: string;
   condition: string;
+  language: string;
   description: string;
   city: string;
   latitude: number | null;
@@ -203,6 +204,7 @@ export type Database = {
             | 'price'
             | 'category'
             | 'condition'
+            | 'language'
             | 'description'
             | 'city'
             | 'latitude'
@@ -341,6 +343,44 @@ export type Database = {
       finalize_listing_purge: {
         Args: { p_listing_id: string };
         Returns: boolean;
+      };
+      search_book_listings: {
+        Args: {
+          p_query?: string | null;
+          p_category?: string | null;
+          p_free_only?: boolean;
+          p_min_price?: number | null;
+          p_max_price?: number | null;
+          p_condition?: string | null;
+          p_latitude?: number | null;
+          p_longitude?: number | null;
+          p_radius_km?: number | null;
+          p_sort?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: Array<{
+          id: string;
+          seller_id: string;
+          title: string;
+          author: string;
+          price: number;
+          category: string;
+          condition: string;
+          description: string;
+          city: string;
+          latitude: number | null;
+          longitude: number | null;
+          cover_url: string | null;
+          image_urls: string[];
+          created_at: string;
+          seller_display_name: string;
+          seller_avatar_url: string | null;
+          seller_listings_count: number;
+          seller_rating_average: number;
+          seller_review_count: number;
+          distance_km: number | null;
+        }>;
       };
     };
     Enums: Record<string, never>;

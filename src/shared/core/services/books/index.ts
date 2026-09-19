@@ -14,3 +14,5 @@ export {
   removeBookListingImageRecords,
 } from './listingImages';
 export type { ListingImageRecord } from './listingImages';
+export { searchBookListings } from './searchListings';
+export type { FeedFilters, FeedListingRow, FeedSort } from './searchListings';

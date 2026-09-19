@@ -67,6 +67,40 @@ export function translateCondition(condition: string) {
   return keys[condition] ? t(keys[condition]) : condition;
 }
 
+export const BOOK_CATEGORIES = [
+  'fiction',
+  'education',
+  'children',
+  'non_fiction',
+  'business',
+  'comics',
+  'other',
+] as const;
+
+export function translateCategory(category: string) {
+  const keys: Record<string, string> = {
+    fiction: 'categories.fiction',
+    education: 'categories.education',
+    children: 'categories.children',
+    non_fiction: 'categories.nonFiction',
+    business: 'categories.business',
+    comics: 'categories.comics',
+    other: 'categories.other',
+  };
+  return keys[category] ? t(keys[category]) : category;
+}
+
+export const BOOK_LANGUAGES = ['uk', 'en', 'other'] as const;
+
+export function translateLanguage(language: string) {
+  const keys: Record<string, string> = {
+    uk: 'languages.uk',
+    en: 'languages.en',
+    other: 'languages.other',
+  };
+  return keys[language] ? t(keys[language]) : language;
+}
+
 type CountNoun = 'book' | 'listing' | 'review';
 
 function ukrainianCountKey(count: number, noun: CountNoun) {

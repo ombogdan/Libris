@@ -15,6 +15,8 @@ export type EditListingForm = {
   about: string;
   free: boolean;
   condition: string;
+  category: string;
+  language: string;
   city: string;
   latitude: number | null;
   longitude: number | null;

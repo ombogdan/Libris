@@ -31,7 +31,7 @@ export const useStyles = createStyles(
       },
       grow: { flex: 1 },
       disabledInput: { opacity: 0.45 },
-      chips: { flexDirection: 'row', gap: scale(8) },
+      chips: { flexDirection: 'row', flexWrap: 'wrap', gap: scale(8) },
       cityHeading: {
         flexDirection: 'row',
         alignItems: 'center',

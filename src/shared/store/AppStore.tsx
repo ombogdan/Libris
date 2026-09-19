@@ -32,10 +32,15 @@ import {
   registerBookListingImages,
   removeBookImages,
   removeBookListingImageRecords,
+  searchBookListings,
   softDeleteBookListing,
   uploadBookImages,
 } from 'services/books';
-import type { LocalBookImage } from 'services/books';
+import type {
+  FeedFilters,
+  FeedListingRow,
+  LocalBookImage,
+} from 'services/books';
 import {
   addFavorite,
   getFavoriteListingIds,
@@ -57,6 +62,8 @@ type AddForm = {
   about: string;
   free: boolean;
   condition: string;
+  category: string;
+  language: string;
   city: string;
   latitude: number | null;
   longitude: number | null;
@@ -77,6 +84,15 @@ type Store = {
   reloadFavorites: () => Promise<void>;
   toggleFav: (id: string) => Promise<void>;
   ads: Ad[];
+  feedBooks: Book[];
+  feedLoading: boolean;
+  feedLoadingMore: boolean;
+  feedError: string | null;
+  feedHasMore: boolean;
+  feedFilters: FeedFilters;
+  setFeedFilters: (filters: Partial<FeedFilters>) => void;
+  loadFeed: () => Promise<void>;
+  loadMoreFeed: () => Promise<void>;
   publish: (form: AddForm) => Promise<Book>;
   updateListing: (
     id: string,
@@ -161,11 +177,68 @@ function mergeMessages(...groups: Message[][]) {
   );
 }
 
+const FEED_TONES: Book['tone'][] = ['accent', 'accent2', 'neutral'];
+
+const DEFAULT_FEED_FILTERS: FeedFilters = {
+  query: '',
+  category: null,
+  freeOnly: false,
+  minPrice: null,
+  maxPrice: null,
+  condition: null,
+  latitude: null,
+  longitude: null,
+  radiusKm: null,
+  sort: 'recent',
+};
+
+function toFeedBook(row: FeedListingRow): Book {
+  return {
+    id: row.id,
+    title: row.title,
+    author: row.author,
+    year: '',
+    price: row.price,
+    cat: row.category,
+    condition: row.condition,
+    city: row.city,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    seller: row.seller_display_name || t('common.user'),
+    rating: row.seller_review_count
+      ? formatRating(row.seller_rating_average)
+      : '—',
+    reviewsCount: row.seller_review_count,
+    sellerAds: formatListingsCount(row.seller_listings_count),
+    tone: FEED_TONES[row.id.charCodeAt(0) % FEED_TONES.length],
+    about: row.description,
+    imageUrls: row.image_urls.length
+      ? row.image_urls
+      : row.cover_url
+      ? [row.cover_url]
+      : [],
+    sellerId: row.seller_id,
+    status: 'active',
+    createdAt: row.created_at,
+    distanceKm: row.distance_km,
+  };
+}
+
 export function AppStoreProvider({ children }: PropsWithChildren) {
   const { session, profile } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(false);
   const [booksError, setBooksError] = useState<string | null>(null);
+  const [feedBooks, setFeedBooks] = useState<Book[]>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedLoadingMore, setFeedLoadingMore] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [feedHasMore, setFeedHasMore] = useState(true);
+  const [feedFilters, setFeedFiltersState] =
+    useState<FeedFilters>(DEFAULT_FEED_FILTERS);
+  const feedRequestSeq = useRef(0);
+  const feedLoadingRef = useRef(false);
+  const feedLoadingMoreRef = useRef(false);
   const [favs, setFavs] = useState<string[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [favoritesError, setFavoritesError] = useState<string | null>(null);
@@ -594,6 +667,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         year: '',
         price: row.price,
         cat: row.category,
+        language: row.language,
         condition: row.condition,
         city: row.city,
         latitude: row.latitude,
@@ -747,8 +821,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           title: f.title.trim(),
           author: f.author.trim(),
           price: f.free ? 0 : Number(f.price),
-          category: 'Інше',
+          category: f.category,
           condition: f.condition,
+          language: f.language,
           description: f.about.trim(),
           city: f.city.trim(),
           latitude: f.latitude,
@@ -815,8 +890,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       }
 
       const ownActiveListings = books.filter(
-        book =>
-          book.sellerId === session.user.id && book.status === 'active',
+        book => book.sellerId === session.user.id && book.status === 'active',
       ).length;
       const book = {
         ...toBook(listing),
@@ -886,6 +960,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           author: form.author.trim(),
           price: form.free ? 0 : Number(form.price.replace(',', '.')),
           condition: form.condition,
+          category: form.category,
+          language: form.language,
           description: form.about.trim(),
           city: form.city.trim(),
           latitude: form.latitude,
@@ -1002,6 +1078,96 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         })),
     [books, session?.user.id],
   );
+  const effectiveFeedFilters = useMemo<FeedFilters>(
+    () => ({
+      ...feedFilters,
+      latitude: profile?.latitude ?? null,
+      longitude: profile?.longitude ?? null,
+    }),
+    [feedFilters, profile?.latitude, profile?.longitude],
+  );
+
+  const loadFeed = useCallback(async () => {
+    const request = ++feedRequestSeq.current;
+    feedLoadingRef.current = true;
+    feedLoadingMoreRef.current = false;
+    setFeedLoading(true);
+    setFeedLoadingMore(false);
+    setFeedError(null);
+    try {
+      const { rows, hasMore } = await searchBookListings(
+        effectiveFeedFilters,
+        0,
+      );
+      if (feedRequestSeq.current !== request) {
+        return;
+      }
+      setFeedBooks(rows.map(toFeedBook));
+      setFeedHasMore(hasMore);
+    } catch (error) {
+      if (feedRequestSeq.current === request) {
+        setFeedError(
+          error && typeof error === 'object' && 'message' in error
+            ? String(error.message)
+            : 'Unknown error',
+        );
+      }
+    } finally {
+      if (feedRequestSeq.current === request) {
+        feedLoadingRef.current = false;
+        setFeedLoading(false);
+      }
+    }
+  }, [effectiveFeedFilters, session?.user.id]);
+
+  const loadMoreFeed = useCallback(async () => {
+    if (
+      feedLoadingRef.current ||
+      feedLoadingMoreRef.current ||
+      !feedHasMore ||
+      !feedBooks.length
+    ) {
+      return;
+    }
+
+    const request = feedRequestSeq.current;
+    feedLoadingMoreRef.current = true;
+    setFeedLoadingMore(true);
+    try {
+      const { rows, hasMore } = await searchBookListings(
+        effectiveFeedFilters,
+        feedBooks.length,
+      );
+      if (feedRequestSeq.current !== request) {
+        return;
+      }
+      setFeedBooks(current => [...current, ...rows.map(toFeedBook)]);
+      setFeedHasMore(hasMore);
+    } catch {
+      // Silent: the user can scroll again to retry, no need for a toast.
+    } finally {
+      if (feedRequestSeq.current === request) {
+        setFeedLoadingMore(false);
+      }
+      feedLoadingMoreRef.current = false;
+    }
+  }, [effectiveFeedFilters, feedBooks.length, feedHasMore, session?.user.id]);
+
+  const setFeedFilters = useCallback((partial: Partial<FeedFilters>) => {
+    feedRequestSeq.current += 1;
+    feedLoadingMoreRef.current = false;
+    setFeedLoadingMore(false);
+    setFeedFiltersState(current => ({ ...current, ...partial }));
+  }, []);
+
+  useEffect(() => {
+    const frame = setTimeout(() => {
+      void loadFeed();
+    }, 350);
+
+    return () => clearTimeout(frame);
+  }, [loadFeed]);
+
   const openSellerChat = useCallback(
     async (book: Book) => {
       const userId = session?.user.id;
@@ -1176,10 +1342,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
             : item,
         ),
       );
-      await Promise.all([
-        reloadChats({ silent: true }),
-        reloadBooks(),
-      ]);
+      await Promise.all([reloadChats({ silent: true }), reloadBooks()]);
     },
     [reloadBooks, reloadChats, updateChats],
   );
@@ -1195,6 +1358,15 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     reloadFavorites,
     toggleFav,
     ads,
+    feedBooks,
+    feedLoading,
+    feedLoadingMore,
+    feedError,
+    feedHasMore,
+    feedFilters,
+    setFeedFilters,
+    loadFeed,
+    loadMoreFeed,
     publish,
     updateListing,
     setListingStatus,

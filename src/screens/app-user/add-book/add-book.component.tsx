@@ -1,4 +1,11 @@
-import { t, translateCondition } from 'shared/localization/i18n';
+import {
+  BOOK_CATEGORIES,
+  BOOK_LANGUAGES,
+  t,
+  translateCategory,
+  translateCondition,
+  translateLanguage,
+} from 'shared/localization/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -24,6 +31,8 @@ const emptyForm: AddBookForm = {
   about: '',
   free: false,
   condition: 'Добрий',
+  category: 'other',
+  language: 'uk',
   city: '',
   latitude: null,
   longitude: null,
@@ -199,10 +208,36 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
             />
           ))}
         </View>
+        <Text style={styles.label}>{t('listingForm.category')}</Text>
+        <View style={styles.chips}>
+          {BOOK_CATEGORIES.map(category => (
+            <Chip
+              key={category}
+              label={translateCategory(category)}
+              active={form.category === category}
+              onPress={() => set('category', category)}
+            />
+          ))}
+        </View>
+        <Text style={styles.label}>{t('listingForm.language')}</Text>
+        <View style={styles.chips}>
+          {BOOK_LANGUAGES.map(language => (
+            <Chip
+              key={language}
+              label={translateLanguage(language)}
+              active={form.language === language}
+              onPress={() => set('language', language)}
+            />
+          ))}
+        </View>
         <View style={styles.cityHeading}>
           <Text style={styles.label}>{t('listingForm.city')}</Text>
           <Chip
-            label={isLocating ? t('listingForm.detecting') : t('listingForm.detectNow')}
+            label={
+              isLocating
+                ? t('listingForm.detecting')
+                : t('listingForm.detectNow')
+            }
             onPress={isLocating ? undefined : detectCity}
           />
         </View>

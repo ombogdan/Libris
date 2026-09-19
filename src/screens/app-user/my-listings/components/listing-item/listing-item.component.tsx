@@ -37,7 +37,7 @@ export function ListingItem({
               <Text
                 style={[styles.statusText, isSold && styles.statusSoldText]}
               >
-                {ad.status}
+                {isSold ? t('myListings.statusSold') : t('myListings.statusActive')}
               </Text>
             </View>
           </View>

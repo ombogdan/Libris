@@ -5,6 +5,7 @@ export type Book = {
   year: string;
   price: number;
   cat: string;
+  language?: string;
   condition: string;
   city: string;
   latitude?: number | null;
@@ -19,6 +20,7 @@ export type Book = {
   sellerId?: string;
   status?: 'active' | 'sold' | 'hidden';
   createdAt?: string;
+  distanceKm?: number | null;
 };
 export const books: Book[] = [
   {
