@@ -1,4 +1,4 @@
-import { appLocale, t } from 'shared/localization/i18n';
+import { getAppLocale, t } from 'shared/localization/i18n';
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
 
@@ -37,12 +37,10 @@ function getCoordinates() {
   );
 }
 
-const geocodingLanguage = appLocale;
-
 async function reverseGeocode(latitude: number, longitude: number) {
   const url =
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
-    `&lat=${latitude}&lon=${longitude}&accept-language=${geocodingLanguage}`;
+    `&lat=${latitude}&lon=${longitude}&accept-language=${getAppLocale()}`;
   const response = await fetch(url, {
     headers: { 'User-Agent': 'Libris/1.0 (mobile app)' },
   });
@@ -66,7 +64,7 @@ export async function getCityCenter(
   const url =
     `https://nominatim.openstreetmap.org/search?format=jsonv2` +
     `&q=${encodeURIComponent(`${city}, Ukraine`)}` +
-    `&countrycodes=ua&limit=1&accept-language=${geocodingLanguage}`;
+    `&countrycodes=ua&limit=1&accept-language=${getAppLocale()}`;
   const response = await fetch(url, {
     headers: { 'User-Agent': 'Libris/1.0 (mobile app)' },
   });

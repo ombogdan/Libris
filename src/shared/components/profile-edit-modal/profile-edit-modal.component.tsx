@@ -16,37 +16,42 @@ import type {
   ProfileEditModalProps,
 } from './profile-edit-modal.types';
 
-const fieldConfig: Record<
-  EditableProfileField,
-  {
-    title: string;
-    label: string;
-    placeholder: string;
-    keyboardType: 'default' | 'phone-pad';
-    autoCapitalize: 'none' | 'words';
+type FieldConfig = {
+  title: string;
+  label: string;
+  placeholder: string;
+  keyboardType: 'default' | 'phone-pad';
+  autoCapitalize: 'none' | 'words';
+};
+
+// Built on demand so the texts follow the current app language.
+const getFieldConfig = (field: EditableProfileField): FieldConfig => {
+  switch (field) {
+    case 'display_name':
+      return {
+        title: t('profile.editName'),
+        label: t('profile.name'),
+        placeholder: t('profile.namePlaceholder'),
+        keyboardType: 'default',
+        autoCapitalize: 'words',
+      };
+    case 'city':
+      return {
+        title: t('profile.editCity'),
+        label: t('profile.city'),
+        placeholder: t('listingForm.cityPlaceholder'),
+        keyboardType: 'default',
+        autoCapitalize: 'words',
+      };
+    case 'phone':
+      return {
+        title: t('profile.editPhone'),
+        label: t('profile.phone'),
+        placeholder: '+380XXXXXXXXX',
+        keyboardType: 'phone-pad',
+        autoCapitalize: 'none',
+      };
   }
-> = {
-  display_name: {
-    title: t('profile.editName'),
-    label: t('profile.name'),
-    placeholder: t('profile.namePlaceholder'),
-    keyboardType: 'default',
-    autoCapitalize: 'words',
-  },
-  city: {
-    title: t('profile.editCity'),
-    label: t('profile.city'),
-    placeholder: t('listingForm.cityPlaceholder'),
-    keyboardType: 'default',
-    autoCapitalize: 'words',
-  },
-  phone: {
-    title: t('profile.editPhone'),
-    label: t('profile.phone'),
-    placeholder: '+380XXXXXXXXX',
-    keyboardType: 'phone-pad',
-    autoCapitalize: 'none',
-  },
 };
 
 export function ProfileEditModal({
@@ -72,7 +77,7 @@ export function ProfileEditModal({
     return null;
   }
 
-  const config = fieldConfig[field];
+  const config = getFieldConfig(field);
 
   return (
     <Modal

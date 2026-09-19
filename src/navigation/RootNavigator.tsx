@@ -11,7 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from 'providers/auth/AuthProvider';
-import { t } from 'shared/localization/i18n';
+import { t, useLocale } from 'shared/localization/i18n';
 import { useAppStore } from 'store/AppStore';
 import {
   AddBookScreen,
@@ -24,6 +24,7 @@ import {
   FeedScreen,
   MyListingsScreen,
   ProfileScreen,
+  SettingsScreen,
   SignupScreen,
   ThreadScreen,
   UserReviewsScreen,
@@ -96,6 +97,18 @@ function TabBarButton(props: BottomTabBarButtonProps) {
 
 const renderTabBarButton = (props: BottomTabBarButtonProps) => (
   <TabBarButton {...props} />
+);
+
+// Screens read their texts through `t()` while rendering, so they are rebuilt
+// when the language changes. The navigation state itself is left untouched.
+function LocaleBoundary({ children }: { children: React.ReactElement }) {
+  const { locale } = useLocale();
+
+  return <React.Fragment key={locale}>{children}</React.Fragment>;
+}
+
+const renderScreenLayout = ({ children }: { children: React.ReactElement }) => (
+  <LocaleBoundary>{children}</LocaleBoundary>
 );
 
 function Tabs() {
@@ -191,6 +204,7 @@ export function RootNavigator() {
         initialRouteName={
           needsProfile ? 'CompleteProfile' : session ? 'Tabs' : 'Welcome'
         }
+        screenLayout={renderScreenLayout}
         screenOptions={{
           headerShown: false,
           contentStyle: styles.content,
@@ -217,6 +231,7 @@ export function RootNavigator() {
             <Stack.Screen name="UserReviews" component={UserReviewsScreen} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
           </>
         )}
       </Stack.Navigator>

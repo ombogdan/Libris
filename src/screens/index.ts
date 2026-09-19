@@ -8,6 +8,7 @@ export { FavoritesScreen } from './app-user/favorites';
 export { FeedScreen } from './app-user/feed';
 export { MyListingsScreen } from './app-user/my-listings';
 export { ProfileScreen } from './app-user/profile';
+export { SettingsScreen } from './app-user/settings';
 export { SignupScreen } from './app-auth/signup';
 export { ThreadScreen } from './app-user/thread';
 export { UserReviewsScreen } from './app-user/user-reviews';

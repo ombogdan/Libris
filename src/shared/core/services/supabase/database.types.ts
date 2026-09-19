@@ -8,6 +8,8 @@ export type Profile = {
   latitude: number | null;
   longitude: number | null;
   onboarding_completed: boolean;
+  notify_messages: boolean;
+  notify_reviews: boolean;
   review_count: number;
   rating_average: number;
   created_at: string;
@@ -206,8 +208,15 @@ export type Database = {
         Row: Profile;
         Insert: Omit<
           Profile,
-          'created_at' | 'updated_at' | 'review_count' | 'rating_average'
+          | 'created_at'
+          | 'updated_at'
+          | 'review_count'
+          | 'rating_average'
+          | 'notify_messages'
+          | 'notify_reviews'
         > & {
+          notify_messages?: boolean;
+          notify_reviews?: boolean;
           review_count?: number;
           rating_average?: number;
           created_at?: string;
@@ -224,6 +233,8 @@ export type Database = {
             | 'latitude'
             | 'longitude'
             | 'onboarding_completed'
+            | 'notify_messages'
+            | 'notify_reviews'
             | 'updated_at'
           >
         >;

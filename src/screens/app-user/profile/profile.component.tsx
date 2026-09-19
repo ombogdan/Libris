@@ -1,18 +1,19 @@
 import { formatRating, t } from 'shared/localization/i18n';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from 'providers/auth/AuthProvider';
+import { ListRow } from 'shared/components/list-row';
+import {
+  ProfileEditModal,
+  useProfileEditor,
+} from 'shared/components/profile-edit-modal';
 import { Button, ScreenHeader } from 'shared/components/ui';
 import { signOutFromGoogle } from 'services/auth';
-import { getCityCenter } from 'services/location';
 import { useAppStore } from 'store/AppStore';
-import { ProfileEditModal } from './components/profile-edit-modal';
-import type { EditableProfileField } from './components/profile-edit-modal';
 import { ProfileMetric } from './components/profile-metric';
-import { ProfileRow } from './components/profile-row';
 import { useStyles } from './profile.styles';
 import type { ProfileScreenProps } from './profile.types';
 
@@ -20,20 +21,14 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const app = useAppStore();
-  const { session, profile, profileError, refreshProfile, updateProfile } =
-    useAuth();
-  const [editingField, setEditingField] = useState<EditableProfileField | null>(
-    null,
-  );
-  const [isSaving, setIsSaving] = useState(false);
-  const [editError, setEditError] = useState('');
+  const { session, profile, profileError, refreshProfile } = useAuth();
+  const editor = useProfileEditor();
 
   const name =
     profile?.display_name.trim() ||
     session?.user.email?.split('@')[0] ||
     t('common.user');
   const city = profile?.city?.trim() || t('common.notSpecified');
-  const phone = profile?.phone || t('common.notSpecified');
   const email = profile?.email || session?.user.email || '';
   const createdYear = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
@@ -53,83 +48,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       void refreshProfile();
     }, [refreshProfile]),
   );
-
-  const editValue = useMemo(() => {
-    if (editingField === 'display_name') {
-      return profile?.display_name || '';
-    }
-    if (editingField === 'city') {
-      return profile?.city || '';
-    }
-    if (editingField === 'phone') {
-      return profile?.phone || '+380';
-    }
-    return '';
-  }, [editingField, profile?.city, profile?.display_name, profile?.phone]);
-
-  const openEditor = (field: EditableProfileField) => {
-    setEditError('');
-    setEditingField(field);
-  };
-
-  const closeEditor = () => {
-    if (!isSaving) {
-      setEditError('');
-      setEditingField(null);
-    }
-  };
-
-  const saveField = async (value: string) => {
-    if (!editingField) {
-      return;
-    }
-
-    const trimmedValue = value.trim();
-    setEditError('');
-    setIsSaving(true);
-
-    try {
-      if (editingField === 'display_name') {
-        if (trimmedValue.length < 2) {
-          throw new Error(t('profile.nameError'));
-        }
-        await updateProfile({ display_name: trimmedValue });
-      }
-
-      if (editingField === 'phone') {
-        const digits = trimmedValue.replace(/\D/g, '');
-        if (digits.length !== 12 || !digits.startsWith('380')) {
-          throw new Error(t('profile.phoneError'));
-        }
-        await updateProfile({ phone: `+${digits}` });
-      }
-
-      if (editingField === 'city') {
-        if (trimmedValue.length < 2) {
-          throw new Error(t('profile.cityError'));
-        }
-        const location = await getCityCenter(trimmedValue);
-        if (!location) {
-          throw new Error(t('listingForm.cityNotFound'));
-        }
-        await updateProfile({
-          city: location.city,
-          latitude: location.latitude,
-          longitude: location.longitude,
-        });
-      }
-
-      setEditingField(null);
-    } catch (error) {
-      setEditError(
-        error && typeof error === 'object' && 'message' in error
-          ? String(error.message)
-          : t('profile.updateError'),
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   return (
     <View style={styles.screen}>
@@ -163,22 +81,17 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         </View>
 
         <View style={styles.rows}>
-          <ProfileRow
-            label={t('profile.name')}
-            value={name}
-            onPress={() => openEditor('display_name')}
-          />
-          <ProfileRow
+          <ListRow
             label={t('profile.myListings')}
             value={String(app.ads.length)}
             onPress={() => navigation.getParent()?.navigate('MyListings')}
           />
-          <ProfileRow
+          <ListRow
             label={t('profile.favorites')}
             value={String(app.favs.length)}
             onPress={() => navigation.navigate('Favorites')}
           />
-          <ProfileRow
+          <ListRow
             label={t('profile.myReviews')}
             value={
               profile?.review_count
@@ -196,22 +109,23 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
               }
             }}
           />
-          <ProfileRow
+          <ListRow
             label={t('profile.city')}
             value={city}
-            onPress={() => openEditor('city')}
-          />
-          <ProfileRow
-            label={t('profile.phone')}
-            value={phone}
-            onPress={() => openEditor('phone')}
-          />
-          <ProfileRow
-            label={t('moderation.blockedUsersTitle')}
-            value={String(app.blockedUserIds.length)}
-            onPress={() => navigation.getParent()?.navigate('BlockedUsers')}
+            onPress={() => editor.open('city')}
+            isLast
           />
         </View>
+
+        {session ? (
+          <View style={styles.rows}>
+            <ListRow
+              label={t('settings.title')}
+              onPress={() => navigation.getParent()?.navigate('Settings')}
+              isLast
+            />
+          </View>
+        ) : null}
 
         {profileError ? <Text style={styles.error}>{profileError}</Text> : null}
 
@@ -233,15 +147,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         )}
       </ScrollView>
 
-      <ProfileEditModal
-        visible={editingField !== null}
-        field={editingField}
-        initialValue={editValue}
-        isSaving={isSaving}
-        error={editError}
-        onClose={closeEditor}
-        onSave={saveField}
-      />
+      <ProfileEditModal {...editor.modalProps} />
     </View>
   );
 }

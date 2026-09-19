@@ -24,16 +24,16 @@ import { ChatItem } from './components/chat-item';
 import { useStyles } from './chats.styles';
 import type { ChatSection, ChatsScreenProps } from './chats.types';
 
-const CHAT_SECTIONS: { key: ChatSection; label: string }[] = [
-  { key: 'buying', label: t('chats.buying') },
-  { key: 'selling', label: t('chats.selling') },
-  { key: 'archive', label: t('chats.archive') },
+const CHAT_SECTIONS: { key: ChatSection; labelKey: string }[] = [
+  { key: 'buying', labelKey: 'chats.buying' },
+  { key: 'selling', labelKey: 'chats.selling' },
+  { key: 'archive', labelKey: 'chats.archive' },
 ];
 
-const EMPTY_SECTION_TEXT: Record<ChatSection, string> = {
-  buying: t('chats.buyingEmpty'),
-  selling: t('chats.sellingEmpty'),
-  archive: t('chats.archiveEmpty'),
+const EMPTY_SECTION_KEY: Record<ChatSection, string> = {
+  buying: 'chats.buyingEmpty',
+  selling: 'chats.sellingEmpty',
+  archive: 'chats.archiveEmpty',
 };
 
 export function ChatsScreen({ navigation }: ChatsScreenProps) {
@@ -123,7 +123,7 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
       );
     }
 
-    return <Empty text={EMPTY_SECTION_TEXT[activeSection]} />;
+    return <Empty text={t(EMPTY_SECTION_KEY[activeSection])} />;
   };
 
   return (
@@ -151,7 +151,7 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
               ]}
             >
               <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                {section.label}
+                {t(section.labelKey)}
               </Text>
             </Pressable>
           );

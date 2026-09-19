@@ -1,4 +1,4 @@
-import { localeTag, t } from 'shared/localization/i18n';
+import { getLocaleTag, t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Text, View } from 'react-native';
 
@@ -11,7 +11,7 @@ const formatDate = (value: string) => {
     return '';
   }
 
-  return date.toLocaleDateString(localeTag, {
+  return date.toLocaleDateString(getLocaleTag(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

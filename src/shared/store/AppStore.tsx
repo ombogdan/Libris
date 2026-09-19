@@ -1,8 +1,9 @@
 import {
   formatListingsCount,
   formatRating,
-  localeTag,
+  getLocaleTag,
   t,
+  useLocale,
 } from 'shared/localization/i18n';
 import React, {
   useCallback,
@@ -171,7 +172,7 @@ function formatChatTime(value: string | null) {
   );
 
   if (dayDifference === 0) {
-    return date.toLocaleTimeString(localeTag, {
+    return date.toLocaleTimeString(getLocaleTag(), {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -180,7 +181,7 @@ function formatChatTime(value: string | null) {
     return t('time.yesterday');
   }
 
-  return date.toLocaleDateString(localeTag, {
+  return date.toLocaleDateString(getLocaleTag(), {
     day: '2-digit',
     month: '2-digit',
   });
@@ -246,6 +247,7 @@ function toFeedBook(row: FeedListingRow): Book {
 
 export function AppStoreProvider({ children }: PropsWithChildren) {
   const { session, profile } = useAuth();
+  const { locale } = useLocale();
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(false);
   const [booksError, setBooksError] = useState<string | null>(null);
@@ -1129,11 +1131,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           title: book.title,
           price: book.price,
           status: book.status === 'sold' ? 'sold' : 'active',
-          stats: t('myListings.published'),
+          stats: t('myListings.published', { lng: locale }),
           tone: book.tone,
           imageUrls: book.imageUrls,
         })),
-    [books, session?.user.id],
+    [books, locale, session?.user.id],
   );
   const effectiveFeedFilters = useMemo<FeedFilters>(
     () => ({
@@ -1443,6 +1445,21 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     },
     [],
   );
+
+  const appliedLocale = useRef(locale);
+
+  useEffect(() => {
+    if (appliedLocale.current === locale) {
+      return;
+    }
+    appliedLocale.current = locale;
+
+    // Chat and listing rows keep pre-formatted text (dates, plurals, ratings),
+    // so rebuild them in the new language.
+    void reloadChats({ silent: true });
+    void reloadBooks();
+    void loadFeed();
+  }, [loadFeed, locale, reloadBooks, reloadChats]);
 
   const value: Store = {
     books,

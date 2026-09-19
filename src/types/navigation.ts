@@ -12,6 +12,7 @@ export type RootStackParamList = {
   UserReviews: { userId: string; displayName?: string };
   UserProfile: { userId: string; displayName?: string };
   BlockedUsers: undefined;
+  Settings: undefined;
 };
 export type TabParamList = {
   Feed: undefined;

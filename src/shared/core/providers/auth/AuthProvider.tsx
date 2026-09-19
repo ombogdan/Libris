@@ -13,20 +13,26 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from 'services/supabase';
 import type { Profile } from 'services/supabase/database.types';
 
+type ProfileChanges = Partial<
+  Pick<
+    Profile,
+    | 'display_name'
+    | 'phone'
+    | 'city'
+    | 'latitude'
+    | 'longitude'
+    | 'notify_messages'
+    | 'notify_reviews'
+  >
+>;
+
 type AuthContextValue = {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
   profileError: string | null;
   refreshProfile: () => Promise<void>;
-  updateProfile: (
-    changes: Partial<
-      Pick<
-        Profile,
-        'display_name' | 'phone' | 'city' | 'latitude' | 'longitude'
-      >
-    >,
-  ) => Promise<void>;
+  updateProfile: (changes: ProfileChanges) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -141,14 +147,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const updateProfile = useCallback(
-    async (
-      changes: Partial<
-        Pick<
-          Profile,
-          'display_name' | 'phone' | 'city' | 'latitude' | 'longitude'
-        >
-      >,
-    ) => {
+    async (changes: ProfileChanges) => {
       if (!sessionUserId) {
         throw new Error(t('profile.authRequired'));
       }

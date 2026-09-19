@@ -386,4 +386,37 @@ export default {
     blockedUsersEmpty: 'Users you block will appear here.',
     loadError: 'Could not load the list.',
   },
+  settings: {
+    title: 'Settings',
+    profile: {
+      title: 'Personal details',
+    },
+    language: {
+      title: 'App language',
+      system: 'System default',
+    },
+    notifications: {
+      title: 'Notifications',
+      messages: 'New messages',
+      reviews: 'New reviews',
+      footnote: 'Choose what we should notify you about.',
+      saveError: 'Could not save notification settings.',
+    },
+    privacy: {
+      title: 'Privacy',
+    },
+    account: {
+      title: 'Account',
+    },
+    deleteAccount: {
+      action: 'Delete account',
+      title: 'Delete your account?',
+      text: 'Your profile, listings with photos, chats, reviews and favorites will be permanently deleted. Chats will disappear for the people you talked to as well. This can’t be undone.',
+      confirm: 'Delete permanently',
+      deleting: 'Deleting…',
+      error:
+        'Could not delete your account. Check your connection and try again.',
+      done: 'Account deleted',
+    },
+  },
 };

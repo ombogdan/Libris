@@ -1,0 +1,26 @@
+import { StyleSheet } from 'react-native';
+
+import { createStyles } from 'shared/theme/createStyles';
+
+export const useStyles = createStyles(
+  ({ theme, scale, bottomInset = 0 }: any) => ({
+    ...StyleSheet.create({
+      screen: {
+        flex: 1,
+        backgroundColor: theme.palette.background,
+      },
+      page: {
+        paddingHorizontal: scale(18),
+        paddingTop: scale(16),
+        paddingBottom: scale(40) + bottomInset,
+        gap: scale(22),
+      },
+    }),
+    colors: {
+      accent: theme.palette.accent,
+      switchTrack: theme.palette.neutral300,
+      switchThumb: theme.palette.white,
+    },
+    checkSize: scale(20),
+  }),
+);

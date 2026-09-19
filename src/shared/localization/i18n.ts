@@ -1,10 +1,19 @@
+import { useSyncExternalStore } from 'react';
 import { I18nManager, NativeModules, Platform } from 'react-native';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { appStorage } from 'services/storage/mmkv';
 import en from './locales/en';
 import uk from './locales/uk';
 
 export type AppLocale = 'uk' | 'en';
+export type LocalePreference = AppLocale | 'system';
+
+const LOCALE_PREFERENCE_KEY = 'app.locale';
+const LOCALE_TAGS: Record<AppLocale, string> = {
+  uk: 'uk-UA',
+  en: 'en-US',
+};
 
 type IOSSettings = {
   AppleLanguages?: string[];
@@ -39,21 +48,72 @@ function detectLocale(): AppLocale {
     : 'en';
 }
 
-export const appLocale = detectLocale();
-export const localeTag = appLocale === 'uk' ? 'uk-UA' : 'en-US';
+function readLocalePreference(): LocalePreference {
+  try {
+    const stored = appStorage.getString(LOCALE_PREFERENCE_KEY);
+    return stored === 'uk' || stored === 'en' ? stored : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+const resolveLocale = (preference: LocalePreference): AppLocale =>
+  preference === 'system' ? detectLocale() : preference;
+
+type LocaleSnapshot = { locale: AppLocale; preference: LocalePreference };
+
+const initialPreference = readLocalePreference();
+let localeSnapshot: LocaleSnapshot = {
+  locale: resolveLocale(initialPreference),
+  preference: initialPreference,
+};
+const localeListeners = new Set<() => void>();
+
+// Read at call time: the language can change while the app is running.
+export const getAppLocale = () => localeSnapshot.locale;
+export const getLocaleTag = () => LOCALE_TAGS[localeSnapshot.locale];
 
 void i18n.use(initReactI18next).init({
   resources: { uk: { translation: uk }, en: { translation: en } },
-  lng: appLocale,
+  lng: localeSnapshot.locale,
   fallbackLng: 'en',
   supportedLngs: ['uk', 'en'],
   initAsync: false,
   interpolation: { escapeValue: false },
 });
 
-export function setLocale(locale: AppLocale) {
-  return i18n.changeLanguage(locale);
+export async function setLocalePreference(preference: LocalePreference) {
+  const locale = resolveLocale(preference);
+
+  try {
+    if (preference === 'system') {
+      appStorage.remove(LOCALE_PREFERENCE_KEY);
+    } else {
+      appStorage.set(LOCALE_PREFERENCE_KEY, preference);
+    }
+  } catch {
+    // The choice still applies until the app restarts.
+  }
+
+  if (locale !== localeSnapshot.locale) {
+    await i18n.changeLanguage(locale);
+  }
+
+  localeSnapshot = { locale, preference };
+  localeListeners.forEach(listener => listener());
 }
+
+const subscribeToLocale = (listener: () => void) => {
+  localeListeners.add(listener);
+  return () => {
+    localeListeners.delete(listener);
+  };
+};
+
+const getLocaleSnapshot = () => localeSnapshot;
+
+export const useLocale = () =>
+  useSyncExternalStore(subscribeToLocale, getLocaleSnapshot);
 
 export const t = (key: string, options?: Record<string, unknown>) =>
   String(i18n.t(key, options));
@@ -121,7 +181,7 @@ function ukrainianCountKey(count: number, noun: CountNoun) {
 
 function countLabel(count: number, noun: CountNoun) {
   const key =
-    appLocale === 'uk'
+    getAppLocale() === 'uk'
       ? ukrainianCountKey(count, noun)
       : `counts.${noun}${count === 1 ? 'One' : 'Many'}`;
   return t(key, { count });
@@ -134,7 +194,7 @@ export const formatReviewsCount = (count: number) =>
 export const formatBooksCount = (count: number) => countLabel(count, 'book');
 
 export const formatRating = (value: number) =>
-  value.toLocaleString(localeTag, {
+  value.toLocaleString(getLocaleTag(), {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });

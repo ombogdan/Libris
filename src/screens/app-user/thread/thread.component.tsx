@@ -39,10 +39,10 @@ import { ReviewModal } from './components/review-modal';
 import { useStyles } from './thread.styles';
 import type { ThreadScreenProps } from './thread.types';
 
-const QUICK_MESSAGES = [
-  t('thread.quickActual'),
-  t('thread.quickMeet'),
-  t('thread.quickDelivery'),
+const QUICK_MESSAGE_KEYS = [
+  'thread.quickActual',
+  'thread.quickMeet',
+  'thread.quickDelivery',
 ];
 
 const LOAD_OLDER_OFFSET = 56;
@@ -515,12 +515,12 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.quick}
             >
-              {QUICK_MESSAGES.map(value => (
+              {QUICK_MESSAGE_KEYS.map(key => (
                 <Chip
-                  key={value}
-                  label={value}
+                  key={key}
+                  label={t(key)}
                   onPress={() => {
-                    setDraft(value);
+                    setDraft(t(key));
                     inputRef.current?.focus();
                   }}
                 />
