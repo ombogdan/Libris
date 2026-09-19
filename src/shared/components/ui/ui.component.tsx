@@ -3,10 +3,12 @@ import React from 'react';
 import {
   Image,
   Pressable,
+  StyleProp,
   Text,
   TextInput,
   TextInputProps,
   View,
+  ViewStyle,
 } from 'react-native';
 import { Book } from 'shared/data';
 import { useStyles } from './ui.styles';
@@ -107,9 +109,11 @@ export function PricePill({ value }: { value: number }) {
 export function Cover({
   book,
   big = false,
+  style,
 }: {
   book: Pick<Book, 'title' | 'tone'> & { imageUrls?: string[] };
   big?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) {
   const styles = useStyles();
   const toneStyle =
@@ -126,7 +130,7 @@ export function Cover({
       : styles.coverTextNeutral;
 
   return (
-    <View style={[styles.cover, big && styles.coverBig, toneStyle]}>
+    <View style={[styles.cover, big && styles.coverBig, toneStyle, style]}>
       {book.imageUrls?.[0] ? (
         <Image
           source={{ uri: book.imageUrls[0] }}

@@ -18,8 +18,6 @@ export const useStyles = createStyles(
     }),
     colors: {
       accent: theme.palette.accent,
-      switchTrack: theme.palette.neutral300,
-      switchThumb: theme.palette.white,
     },
     checkSize: scale(20),
   }),

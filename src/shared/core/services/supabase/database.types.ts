@@ -173,9 +173,13 @@ export type BlockedUserProfile = {
 
 export type Report = {
   id: string;
-  reporter_id: string;
+  reporter_id: string | null;
+  reporter_snapshot_id: string;
   reported_user_id: string | null;
+  reported_user_snapshot_id: string | null;
+  reported_user_name: string | null;
   listing_id: string | null;
+  listing_snapshot_id: string | null;
   listing_title: string | null;
   reason: string;
   comment: string;

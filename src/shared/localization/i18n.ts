@@ -199,4 +199,17 @@ export const formatRating = (value: number) =>
     maximumFractionDigits: 1,
   });
 
+export function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString(getLocaleTag(), {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 export default i18n;

@@ -1,4 +1,5 @@
 import {
+  formatDate,
   formatReviewsCount,
   t,
   translateCondition,
@@ -19,6 +20,7 @@ import type { ReportReason } from 'services/moderation';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
+import { SimilarBooks } from './components/similar-books';
 import { useStyles } from './book.styles';
 import type { BookScreenProps } from './book.types';
 
@@ -34,6 +36,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   const [reportError, setReportError] = useState<string | null>(null);
   const book = store.books.find(item => item.id === route.params.bookId);
   const isOwnListing = book?.sellerId === session?.user.id;
+  const publishedAt = book?.createdAt ? formatDate(book.createdAt) : '';
 
   const submitReport = async ({
     reason,
@@ -105,7 +108,14 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           <Chip label={translateCondition(book.condition)} />
         </View>
         <Text style={styles.title}>{book.title}</Text>
-        <Text style={styles.author}>{book.author}</Text>
+        <View style={styles.byline}>
+          <Text style={styles.author}>{book.author}</Text>
+          {publishedAt ? (
+            <Text style={common.meta}>
+              {t('book.published', { date: publishedAt })}
+            </Text>
+          ) : null}
+        </View>
         <Text style={common.body}>{book.about}</Text>
         <Pressable
           accessibilityRole="button"
@@ -166,6 +176,12 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
               : t('favorites.add')
           }
           onPress={() => store.toggleFav(book.id)}
+        />
+        <SimilarBooks
+          book={book}
+          books={store.books}
+          excludeSellerId={session?.user.id}
+          onOpen={bookId => navigation.push('Book', { bookId })}
         />
         {!isOwnListing ? (
           <Pressable

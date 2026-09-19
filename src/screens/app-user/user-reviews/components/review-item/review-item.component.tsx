@@ -1,22 +1,9 @@
-import { getLocaleTag, t } from 'shared/localization/i18n';
+import { formatDate, t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Text, View } from 'react-native';
 
 import { useStyles } from './review-item.styles';
 import type { ReviewItemProps } from './review-item.types';
-
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  return date.toLocaleDateString(getLocaleTag(), {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-};
 
 const stars = (rating: number) => {
   const normalized = Math.min(5, Math.max(0, Math.round(rating)));

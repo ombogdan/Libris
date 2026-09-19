@@ -90,6 +90,7 @@ export default {
     priceError: 'Enter a valid price or choose “Give away”.',
     cityNotFound: 'Could not find this city. Check the name.',
     published: 'Listing published',
+    similar: 'Similar books',
     publishError: 'Could not publish the book.',
     updated: 'Listing updated',
     updateError: 'Could not update the listing.',
@@ -172,6 +173,7 @@ export default {
   },
   book: {
     title: 'Listing',
+    published: 'Published {{date}}',
     noReviews: 'no reviews',
     ownListing: 'This is your listing',
     openingChat: 'Opening chat…',

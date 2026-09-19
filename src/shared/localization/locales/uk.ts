@@ -90,6 +90,7 @@ export default {
     priceError: 'Вкажи коректну ціну або обери «Віддам даром».',
     cityNotFound: 'Не вдалося знайти це місто. Перевір назву.',
     published: 'Оголошення опубліковано',
+    similar: 'Схожі книги',
     publishError: 'Не вдалося опублікувати книгу.',
     updated: 'Оголошення оновлено',
     updateError: 'Не вдалося оновити оголошення.',
@@ -171,6 +172,7 @@ export default {
   },
   book: {
     title: 'Оголошення',
+    published: 'Опубліковано {{date}}',
     noReviews: 'без відгуків',
     ownListing: 'Це ваше оголошення',
     openingChat: 'Відкриваємо чат…',

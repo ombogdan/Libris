@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Switch, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -19,29 +19,19 @@ import { SettingsSection } from './components/settings-section';
 import { useStyles } from './settings.styles';
 import type { SettingsScreenProps } from './settings.types';
 
-type NotificationKey = 'notify_messages' | 'notify_reviews';
-
 const LANGUAGE_OPTIONS: { value: LocalePreference; label?: string }[] = [
   { value: 'system' },
   { value: 'uk', label: 'Українська' },
   { value: 'en', label: 'English' },
 ];
 
-const NOTIFICATION_OPTIONS: { key: NotificationKey; labelKey: string }[] = [
-  { key: 'notify_messages', labelKey: 'settings.notifications.messages' },
-  { key: 'notify_reviews', labelKey: 'settings.notifications.reviews' },
-];
-
 export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const store = useAppStore();
-  const { session, profile, updateProfile } = useAuth();
+  const { session, profile } = useAuth();
   const { preference } = useLocale();
   const editor = useProfileEditor();
-  const [pendingNotifications, setPendingNotifications] = useState<
-    Partial<Record<NotificationKey, boolean>>
-  >({});
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -51,26 +41,6 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     session?.user.email?.split('@')[0] ||
     t('common.user');
   const phone = profile?.phone || t('common.notSpecified');
-
-  const isNotificationEnabled = (key: NotificationKey) =>
-    pendingNotifications[key] ?? profile?.[key] ?? true;
-
-  const setNotification = async (key: NotificationKey, enabled: boolean) => {
-    // Show the new value right away and fall back if saving fails.
-    setPendingNotifications(current => ({ ...current, [key]: enabled }));
-
-    try {
-      await updateProfile({ [key]: enabled });
-    } catch {
-      store.notify(t('settings.notifications.saveError'));
-    } finally {
-      setPendingNotifications(current => {
-        const next = { ...current };
-        delete next[key];
-        return next;
-      });
-    }
-  };
 
   const closeDeleteModal = () => {
     if (!isDeleting) {
@@ -134,42 +104,6 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               }
             />
           ))}
-        </SettingsSection>
-
-        <SettingsSection
-          title={t('settings.notifications.title')}
-          footnote={t('settings.notifications.footnote')}
-        >
-          {NOTIFICATION_OPTIONS.map((option, index) => {
-            const enabled = isNotificationEnabled(option.key);
-            const isSaving = option.key in pendingNotifications;
-
-            return (
-              <ListRow
-                key={option.key}
-                label={t(option.labelKey)}
-                disabled={isSaving}
-                isLast={index === NOTIFICATION_OPTIONS.length - 1}
-                onPress={() => void setNotification(option.key, !enabled)}
-                showChevron={false}
-                accessory={
-                  <Switch
-                    value={enabled}
-                    disabled={isSaving}
-                    onValueChange={value =>
-                      void setNotification(option.key, value)
-                    }
-                    trackColor={{
-                      false: styles.colors.switchTrack,
-                      true: styles.colors.accent,
-                    }}
-                    thumbColor={styles.colors.switchThumb}
-                    ios_backgroundColor={styles.colors.switchTrack}
-                  />
-                }
-              />
-            );
-          })}
         </SettingsSection>
 
         <SettingsSection title={t('settings.privacy.title')}>

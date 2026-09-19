@@ -20,6 +20,7 @@ export const useStyles = createStyles(
         letterSpacing: scale(-0.7),
         color: theme.palette.text,
       },
+      byline: { gap: scale(3) },
       author: { fontSize: scale(14), color: theme.palette.neutral600 },
       seller: {
         backgroundColor: theme.palette.white,
