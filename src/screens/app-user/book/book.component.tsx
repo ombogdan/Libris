@@ -1,4 +1,8 @@
-import { formatReviewsCount, t, translateCondition } from 'shared/localization/i18n';
+import {
+  formatReviewsCount,
+  t,
+  translateCondition,
+} from 'shared/localization/i18n';
 import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +14,8 @@ import {
   ScreenHeader,
   useCommonStyles,
 } from 'shared/components/ui';
+import { ReportModal } from 'shared/components/report-modal';
+import type { ReportReason } from 'services/moderation';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
@@ -23,8 +29,41 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   const store = useAppStore();
   const { session } = useAuth();
   const [isOpeningChat, setIsOpeningChat] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const book = store.books.find(item => item.id === route.params.bookId);
   const isOwnListing = book?.sellerId === session?.user.id;
+
+  const submitReport = async ({
+    reason,
+    comment,
+  }: {
+    reason: ReportReason;
+    comment: string;
+  }) => {
+    if (!book) {
+      return;
+    }
+
+    setReportSubmitting(true);
+    setReportError(null);
+    try {
+      await store.reportContent({ reason, listingId: book.id, comment });
+      setReportVisible(false);
+      store.notify(t('report.sent'));
+    } catch (submitError) {
+      setReportError(
+        submitError &&
+          typeof submitError === 'object' &&
+          'message' in submitError
+          ? String(submitError.message)
+          : t('report.sendError'),
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   const openChat = async () => {
     if (!book || isOpeningChat || isOwnListing) {
@@ -128,7 +167,25 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           }
           onPress={() => store.toggleFav(book.id)}
         />
+        {!isOwnListing ? (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.reportLink}
+            onPress={() => setReportVisible(true)}
+          >
+            <Text style={styles.reportLinkText}>
+              {t('report.reportListing')}
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
+      <ReportModal
+        visible={reportVisible}
+        isSubmitting={reportSubmitting}
+        error={reportError}
+        onClose={() => setReportVisible(false)}
+        onSubmit={payload => void submitReport(payload)}
+      />
     </View>
   );
 }

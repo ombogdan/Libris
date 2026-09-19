@@ -56,5 +56,14 @@ export const useStyles = createStyles(
         fontWeight: '800',
         color: theme.palette.text,
       },
+      reportLink: {
+        alignSelf: 'center',
+        paddingVertical: scale(10),
+      },
+      reportLinkText: {
+        fontSize: scale(13),
+        fontWeight: '700',
+        color: theme.palette.error,
+      },
     }),
 );

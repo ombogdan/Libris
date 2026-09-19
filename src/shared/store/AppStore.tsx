@@ -54,6 +54,13 @@ import {
   sendChatMessage,
 } from 'services/chats';
 import { submitConversationReview } from 'services/reviews';
+import {
+  blockUser as blockUserRequest,
+  fetchBlockedUserIds,
+  reportContent as reportContentRequest,
+  unblockUser as unblockUserRequest,
+} from 'services/moderation';
+import type { ReportReason } from 'services/moderation';
 
 type AddForm = {
   title: string;
@@ -121,6 +128,17 @@ type Store = {
     rating: number,
     comment: string,
   ) => Promise<void>;
+  blockedUserIds: string[];
+  blockedUsersLoading: boolean;
+  reloadBlockedUsers: () => Promise<void>;
+  blockUser: (userId: string) => Promise<void>;
+  unblockUser: (userId: string) => Promise<void>;
+  reportContent: (options: {
+    reason: ReportReason;
+    reportedUserId?: string | null;
+    listingId?: string | null;
+    comment?: string;
+  }) => Promise<void>;
   toast: string;
   notify: (text: string) => void;
 };
@@ -244,6 +262,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const [favs, setFavs] = useState<string[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [favoritesError, setFavoritesError] = useState<string | null>(null);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
+  const [blockedUsersLoading, setBlockedUsersLoading] = useState(false);
+  const blockedUsersRequest = useRef(0);
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
   const [chatsError, setChatsError] = useState<string | null>(null);
@@ -600,6 +621,39 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       favoritesRequest.current += 1;
     };
   }, [reloadFavorites]);
+
+  const reloadBlockedUsers = useCallback(async () => {
+    const request = ++blockedUsersRequest.current;
+    const userId = session?.user.id;
+
+    if (!userId) {
+      setBlockedUserIds([]);
+      setBlockedUsersLoading(false);
+      return;
+    }
+
+    setBlockedUsersLoading(true);
+    try {
+      const ids = await fetchBlockedUserIds();
+      if (request === blockedUsersRequest.current) {
+        setBlockedUserIds(ids);
+      }
+    } catch {
+      // Silent: the blocked-users screen can retry on its own.
+    } finally {
+      if (request === blockedUsersRequest.current) {
+        setBlockedUsersLoading(false);
+      }
+    }
+  }, [session?.user.id]);
+
+  useEffect(() => {
+    reloadBlockedUsers();
+
+    return () => {
+      blockedUsersRequest.current += 1;
+    };
+  }, [reloadBlockedUsers]);
 
   const toggleFav = useCallback(
     async (id: string) => {
@@ -1350,6 +1404,46 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     [reloadBooks, reloadChats, updateChats],
   );
 
+  const blockUser = useCallback(
+    async (userId: string) => {
+      await blockUserRequest(userId);
+      setBlockedUserIds(current =>
+        current.includes(userId) ? current : [...current, userId],
+      );
+      await Promise.all([
+        reloadBooks(),
+        reloadChats({ silent: true }),
+        loadFeed(),
+      ]);
+    },
+    [loadFeed, reloadBooks, reloadChats],
+  );
+
+  const unblockUser = useCallback(
+    async (userId: string) => {
+      await unblockUserRequest(userId);
+      setBlockedUserIds(current => current.filter(id => id !== userId));
+      await Promise.all([
+        reloadBooks(),
+        reloadChats({ silent: true }),
+        loadFeed(),
+      ]);
+    },
+    [loadFeed, reloadBooks, reloadChats],
+  );
+
+  const reportContent = useCallback(
+    async (options: {
+      reason: ReportReason;
+      reportedUserId?: string | null;
+      listingId?: string | null;
+      comment?: string;
+    }) => {
+      await reportContentRequest(options);
+    },
+    [],
+  );
+
   const value: Store = {
     books,
     booksLoading,
@@ -1384,6 +1478,12 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     send,
     retryMessage,
     submitReview,
+    blockedUserIds,
+    blockedUsersLoading,
+    reloadBlockedUsers,
+    blockUser,
+    unblockUser,
+    reportContent,
     toast,
     notify,
   };

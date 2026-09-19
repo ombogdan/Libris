@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -12,21 +13,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BookRow, Button, ScreenHeader } from 'shared/components/ui';
+import { ReportModal } from 'shared/components/report-modal';
 import type { Book } from 'shared/data';
-import {
-  formatListingsCount,
-  formatRating,
-  t,
-} from 'shared/localization/i18n';
+import { formatListingsCount, formatRating, t } from 'shared/localization/i18n';
 import {
   fetchPublicUserListings,
   fetchPublicUserProfile,
 } from 'services/profiles';
 import { fetchUserReviews } from 'services/reviews';
+import type { ReportReason } from 'services/moderation';
 import type {
   PublicUserProfile,
   UserReviewDetail,
 } from 'services/supabase/database.types';
+import { useAuth } from 'providers/auth/AuthProvider';
 import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { ReviewItem } from '../user-reviews/components/review-item';
@@ -56,12 +56,16 @@ export function UserProfileScreen({
   const styles = useStyles({ bottomInset: insets.bottom });
   const { theme } = useTheme();
   const store = useAppStore();
+  const { session } = useAuth();
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [listings, setListings] = useState<Book[]>([]);
   const [reviews, setReviews] = useState<UserReviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
 
   const load = useCallback(
     async (refresh = false) => {
@@ -132,6 +136,15 @@ export function UserProfileScreen({
     }, [load]),
   );
 
+  const displayName =
+    profile?.display_name || route.params.displayName || t('common.user');
+  const initial = displayName.trim().charAt(0).toUpperCase() || '?';
+  const memberYear = profile
+    ? new Date(profile.created_at).getFullYear().toString()
+    : '';
+  const isOwnProfile = route.params.userId === session?.user.id;
+  const isBlocked = store.blockedUserIds.includes(route.params.userId);
+
   const openReviews = () =>
     navigation.navigate('UserReviews', {
       userId: route.params.userId,
@@ -150,17 +163,84 @@ export function UserProfileScreen({
     [navigation, store],
   );
 
-  const displayName =
-    profile?.display_name || route.params.displayName || t('common.user');
-  const initial = displayName.trim().charAt(0).toUpperCase() || '?';
-  const memberYear = profile
-    ? new Date(profile.created_at).getFullYear().toString()
-    : '';
+  const toggleBlock = async () => {
+    try {
+      if (isBlocked) {
+        await store.unblockUser(route.params.userId);
+        store.notify(t('moderation.unblocked'));
+      } else {
+        await store.blockUser(route.params.userId);
+        store.notify(t('moderation.blocked', { name: displayName }));
+        navigation.goBack();
+      }
+    } catch (blockActionError) {
+      store.notify(
+        blockActionError &&
+          typeof blockActionError === 'object' &&
+          'message' in blockActionError
+          ? String(blockActionError.message)
+          : t(isBlocked ? 'moderation.unblockError' : 'moderation.blockError'),
+      );
+    }
+  };
+
+  const confirmToggleBlock = () => {
+    Alert.alert(
+      t(
+        isBlocked
+          ? 'moderation.unblockConfirmTitle'
+          : 'moderation.blockConfirmTitle',
+        { name: displayName },
+      ),
+      isBlocked ? undefined : t('moderation.blockConfirmText'),
+      [
+        { text: t('moderation.menuCancel'), style: 'cancel' },
+        {
+          text: t(isBlocked ? 'moderation.unblock' : 'moderation.blockConfirm'),
+          style: 'destructive',
+          onPress: () => void toggleBlock(),
+        },
+      ],
+    );
+  };
+
+  const submitReport = async ({
+    reason,
+    comment,
+  }: {
+    reason: ReportReason;
+    comment: string;
+  }) => {
+    setReportSubmitting(true);
+    setReportError(null);
+    try {
+      await store.reportContent({
+        reason,
+        reportedUserId: route.params.userId,
+        comment,
+      });
+      setReportVisible(false);
+      store.notify(t('report.sent'));
+    } catch (submitError) {
+      setReportError(
+        submitError &&
+          typeof submitError === 'object' &&
+          'message' in submitError
+          ? String(submitError.message)
+          : t('report.sendError'),
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   if (loading && !profile) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader title={t('userProfile.title')} onBack={navigation.goBack} />
+        <ScreenHeader
+          title={t('userProfile.title')}
+          onBack={navigation.goBack}
+        />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={theme.palette.accent} />
           <Text style={styles.stateText}>{t('userProfile.loading')}</Text>
@@ -172,10 +252,17 @@ export function UserProfileScreen({
   if (error && !profile) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader title={t('userProfile.title')} onBack={navigation.goBack} />
+        <ScreenHeader
+          title={t('userProfile.title')}
+          onBack={navigation.goBack}
+        />
         <View style={styles.centered}>
           <Text style={styles.stateText}>{t('userProfile.loadError')}</Text>
-          <Button secondary label={t('common.retry')} onPress={() => void load()} />
+          <Button
+            secondary
+            label={t('common.retry')}
+            onPress={() => void load()}
+          />
         </View>
       </View>
     );
@@ -203,7 +290,10 @@ export function UserProfileScreen({
             <View style={styles.profileCard}>
               <View style={styles.avatar}>
                 {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+                  <Image
+                    source={{ uri: profile.avatar_url }}
+                    style={styles.avatarImage}
+                  />
                 ) : (
                   <Text style={styles.avatarText}>{initial}</Text>
                 )}
@@ -224,28 +314,61 @@ export function UserProfileScreen({
                       ? `★ ${formatRating(profile.rating_average)}`
                       : '—'}
                   </Text>
-                  <Text style={styles.statLabel}>{t('userProfile.rating')}</Text>
+                  <Text style={styles.statLabel}>
+                    {t('userProfile.rating')}
+                  </Text>
                 </View>
                 <View style={[styles.stat, styles.statBorder]}>
-                  <Text style={styles.statValue}>{profile?.review_count ?? 0}</Text>
-                  <Text style={styles.statLabel}>{t('userProfile.reviews')}</Text>
+                  <Text style={styles.statValue}>
+                    {profile?.review_count ?? 0}
+                  </Text>
+                  <Text style={styles.statLabel}>
+                    {t('userProfile.reviews')}
+                  </Text>
                 </View>
                 <View style={[styles.stat, styles.statBorder]}>
-                  <Text style={styles.statValue}>{profile?.listings_count ?? 0}</Text>
-                  <Text style={styles.statLabel}>{t('userProfile.listings')}</Text>
+                  <Text style={styles.statValue}>
+                    {profile?.listings_count ?? 0}
+                  </Text>
+                  <Text style={styles.statLabel}>
+                    {t('userProfile.listings')}
+                  </Text>
                 </View>
               </Pressable>
             </View>
 
+            {!isOwnProfile ? (
+              <View style={styles.moderationActions}>
+                <Button
+                  danger
+                  label={t(
+                    isBlocked ? 'moderation.unblock' : 'moderation.blockAction',
+                  )}
+                  onPress={confirmToggleBlock}
+                />
+                <Button
+                  danger
+                  label={t('report.reportUser')}
+                  onPress={() => setReportVisible(true)}
+                />
+              </View>
+            ) : null}
+
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('userProfile.recentReviews')}</Text>
+              <Text style={styles.sectionTitle}>
+                {t('userProfile.recentReviews')}
+              </Text>
               <Pressable accessibilityRole="button" onPress={openReviews}>
-                <Text style={styles.sectionAction}>{t('userProfile.allReviews')}</Text>
+                <Text style={styles.sectionAction}>
+                  {t('userProfile.allReviews')}
+                </Text>
               </Pressable>
             </View>
             {reviews.length ? (
               <View style={styles.reviews}>
-                {reviews.map(review => <ReviewItem key={review.id} review={review} />)}
+                {reviews.map(review => (
+                  <ReviewItem key={review.id} review={review} />
+                ))}
               </View>
             ) : (
               <View style={styles.emptyListings}>
@@ -253,7 +376,9 @@ export function UserProfileScreen({
               </View>
             )}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('userProfile.activeListings')}</Text>
+              <Text style={styles.sectionTitle}>
+                {t('userProfile.activeListings')}
+              </Text>
               <Text style={styles.details}>
                 {formatListingsCount(profile?.listings_count ?? 0)}
               </Text>
@@ -266,6 +391,13 @@ export function UserProfileScreen({
           </View>
         }
         showsVerticalScrollIndicator={false}
+      />
+      <ReportModal
+        visible={reportVisible}
+        isSubmitting={reportSubmitting}
+        error={reportError}
+        onClose={() => setReportVisible(false)}
+        onSubmit={payload => void submitReport(payload)}
       />
     </View>
   );

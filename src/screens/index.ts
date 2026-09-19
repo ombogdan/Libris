@@ -1,4 +1,5 @@
 export { AddBookScreen } from './app-user/add-book';
+export { BlockedUsersScreen } from './app-user/blocked-users';
 export { BookScreen } from './app-user/book';
 export { ChatsScreen } from './app-user/chats';
 export { CompleteProfileScreen } from './app-auth/complete-profile';

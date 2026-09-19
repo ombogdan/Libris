@@ -9,6 +9,10 @@ export const useStyles = createStyles(
         flex: 1,
         backgroundColor: theme.palette.background,
       },
+      moderationActions: {
+        marginTop: scale(14),
+        gap: scale(2),
+      },
       page: {
         flexGrow: 1,
         paddingHorizontal: scale(18),

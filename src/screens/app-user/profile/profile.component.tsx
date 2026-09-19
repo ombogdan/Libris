@@ -20,13 +20,8 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const app = useAppStore();
-  const {
-    session,
-    profile,
-    profileError,
-    refreshProfile,
-    updateProfile,
-  } = useAuth();
+  const { session, profile, profileError, refreshProfile, updateProfile } =
+    useAuth();
   const [editingField, setEditingField] = useState<EditableProfileField | null>(
     null,
   );
@@ -45,7 +40,11 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     : null;
   const activeListings = app.ads.filter(ad => ad.status === 'active').length;
   const soldListings = app.ads.filter(ad => ad.status === 'sold').length;
-  const meta = [city, email, createdYear ? t('common.since', { year: createdYear }) : '']
+  const meta = [
+    city,
+    email,
+    createdYear ? t('common.since', { year: createdYear }) : '',
+  ]
     .filter(Boolean)
     .join(' · ');
 
@@ -149,9 +148,18 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         </View>
 
         <View style={styles.metrics}>
-          <ProfileMetric value={String(app.ads.length)} label={t('profile.listings')} />
-          <ProfileMetric value={String(activeListings)} label={t('profile.active')} />
-          <ProfileMetric value={String(soldListings)} label={t('profile.sold')} />
+          <ProfileMetric
+            value={String(app.ads.length)}
+            label={t('profile.listings')}
+          />
+          <ProfileMetric
+            value={String(activeListings)}
+            label={t('profile.active')}
+          />
+          <ProfileMetric
+            value={String(soldListings)}
+            label={t('profile.sold')}
+          />
         </View>
 
         <View style={styles.rows}>
@@ -174,7 +182,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
             label={t('profile.myReviews')}
             value={
               profile?.review_count
-                  ? `${formatRating(profile.rating_average)} · ${profile.review_count}`
+                ? `${formatRating(profile.rating_average)} · ${
+                    profile.review_count
+                  }`
                 : t('common.noneYet')
             }
             onPress={() => {
@@ -196,12 +206,21 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
             value={phone}
             onPress={() => openEditor('phone')}
           />
+          <ProfileRow
+            label={t('moderation.blockedUsersTitle')}
+            value={String(app.blockedUserIds.length)}
+            onPress={() => navigation.getParent()?.navigate('BlockedUsers')}
+          />
         </View>
 
         {profileError ? <Text style={styles.error}>{profileError}</Text> : null}
 
         {session ? (
-          <Button danger label={t('profile.signOut')} onPress={signOutFromGoogle} />
+          <Button
+            danger
+            label={t('profile.signOut')}
+            onPress={signOutFromGoogle}
+          />
         ) : (
           <Button
             label={t('profile.signIn')}

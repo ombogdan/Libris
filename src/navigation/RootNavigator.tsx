@@ -15,6 +15,7 @@ import { t } from 'shared/localization/i18n';
 import { useAppStore } from 'store/AppStore';
 import {
   AddBookScreen,
+  BlockedUsersScreen,
   BookScreen,
   ChatsScreen,
   CompleteProfileScreen,
@@ -215,6 +216,7 @@ export function RootNavigator() {
             <Stack.Screen name="EditListing" component={EditListingScreen} />
             <Stack.Screen name="UserReviews" component={UserReviewsScreen} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+            <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
           </>
         )}
       </Stack.Navigator>

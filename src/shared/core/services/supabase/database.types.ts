@@ -156,6 +156,30 @@ export type Review = {
   updated_at: string;
 };
 
+export type UserBlock = {
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+};
+
+export type BlockedUserProfile = {
+  blocked_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  blocked_at: string;
+};
+
+export type Report = {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string | null;
+  listing_id: string | null;
+  listing_title: string | null;
+  reason: string;
+  comment: string;
+  created_at: string;
+};
+
 export type ProfileReviewSummary = {
   user_id: string;
   rating_average: number;
@@ -306,6 +330,18 @@ export type Database = {
         Update: Partial<Pick<Review, 'rating' | 'comment' | 'updated_at'>>;
         Relationships: [];
       };
+      user_blocks: {
+        Row: UserBlock;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      reports: {
+        Row: Report;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: {
       listing_seller_profiles: {
@@ -322,6 +358,10 @@ export type Database = {
       };
       user_review_details: {
         Row: UserReviewDetail;
+        Relationships: [];
+      };
+      blocked_user_profiles: {
+        Row: BlockedUserProfile;
         Relationships: [];
       };
     };
@@ -419,6 +459,27 @@ export type Database = {
           seller_review_count: number;
           distance_km: number | null;
         }>;
+      };
+      has_blocked: {
+        Args: { p_blocker: string; p_blocked: string };
+        Returns: boolean;
+      };
+      block_user: {
+        Args: { p_user_id: string };
+        Returns: undefined;
+      };
+      unblock_user: {
+        Args: { p_user_id: string };
+        Returns: undefined;
+      };
+      report_content: {
+        Args: {
+          p_reason: string;
+          p_reported_user_id?: string | null;
+          p_listing_id?: string | null;
+          p_comment?: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;
