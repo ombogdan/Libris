@@ -1,8 +1,15 @@
-import React, { useCallback, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   Text,
   View,
@@ -14,16 +21,50 @@ import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { ChatItem } from './components/chat-item';
 import { useStyles } from './chats.styles';
-import type { ChatsScreenProps } from './chats.types';
+import type { ChatSection, ChatsScreenProps } from './chats.types';
+
+const CHAT_SECTIONS: { key: ChatSection; label: string }[] = [
+  { key: 'buying', label: 'Купую' },
+  { key: 'selling', label: 'Продаю' },
+  { key: 'archive', label: 'Архів' },
+];
+
+const EMPTY_SECTION_TEXT: Record<ChatSection, string> = {
+  buying: 'Тут з’являться розмови про книги, які ти хочеш придбати.',
+  selling:
+    'Тут з’являться повідомлення від людей, які цікавляться твоїми книгами.',
+  archive: 'Сюди потраплять розмови про продані або видалені оголошення.',
+};
 
 export function ChatsScreen({ navigation }: ChatsScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const { theme } = useTheme();
   const store = useAppStore();
-  const hasChats = store.chats.length > 0;
   const reloadChats = store.reloadChats;
+  const [activeSection, setActiveSection] = useState<ChatSection>('buying');
   const [refreshingChats, setRefreshingChats] = useState(false);
+  const autoSelectedSection = useRef(false);
+  const sectionChats = useMemo(
+    () => store.chats.filter(chat => chat.section === activeSection),
+    [activeSection, store.chats],
+  );
+  const hasChats = sectionChats.length > 0;
+
+  useEffect(() => {
+    if (autoSelectedSection.current || store.chatsLoading) {
+      return;
+    }
+
+    autoSelectedSection.current = true;
+    const sectionWithUnread = CHAT_SECTIONS.find(section =>
+      store.chats.some(chat => chat.section === section.key && chat.unread),
+    );
+
+    if (sectionWithUnread) {
+      setActiveSection(sectionWithUnread.key);
+    }
+  }, [store.chatsLoading, store.chats]);
 
   useFocusEffect(
     useCallback(() => {
@@ -82,15 +123,43 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
       );
     }
 
-    return <Empty text="Тут з’являться твої розмови про книги з оголошень." />;
+    return <Empty text={EMPTY_SECTION_TEXT[activeSection]} />;
   };
 
   return (
     <View style={styles.screen}>
       <ScreenHeader title="Чати" />
 
+      <View
+        accessibilityRole="tablist"
+        accessibilityLabel="Розділи чатів"
+        style={styles.tabs}
+      >
+        {CHAT_SECTIONS.map(section => {
+          const active = section.key === activeSection;
+
+          return (
+            <Pressable
+              key={section.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              onPress={() => setActiveSection(section.key)}
+              style={({ pressed }) => [
+                styles.tab,
+                active && styles.tabActive,
+                pressed && styles.tabPressed,
+              ]}
+            >
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                {section.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <FlatList
-        data={store.chats}
+        data={sectionChats}
         keyExtractor={chat => chat.id}
         renderItem={renderChat}
         contentContainerStyle={[styles.page, !hasChats && styles.emptyPage]}

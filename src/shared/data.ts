@@ -7,8 +7,11 @@ export type Book = {
   cat: string;
   condition: string;
   city: string;
+  latitude?: number | null;
+  longitude?: number | null;
   seller: string;
   rating: string;
+  reviewsCount?: number;
   sellerAds: string;
   tone: 'accent' | 'accent2' | 'neutral';
   about: string;
@@ -135,6 +138,11 @@ export type Chat = {
   unreadCount: number;
   lastMessage: string;
   lastMessageAt: string | null;
+  section: 'buying' | 'selling' | 'archive';
+  archivedAt: string | null;
+  archiveReason: 'sold' | 'deleted' | 'hidden' | null;
+  canReview: boolean;
+  myReviewRating: number | null;
   msgs: Message[];
   messagesLoaded: boolean;
   messagesLoading: boolean;

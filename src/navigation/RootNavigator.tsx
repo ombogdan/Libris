@@ -18,12 +18,14 @@ import {
   BookScreen,
   ChatsScreen,
   CompleteProfileScreen,
+  EditListingScreen,
   FavoritesScreen,
   FeedScreen,
   MyListingsScreen,
   ProfileScreen,
   SignupScreen,
   ThreadScreen,
+  UserReviewsScreen,
   WelcomeScreen,
 } from 'screens';
 import { useTheme } from 'shared/theme';
@@ -209,6 +211,8 @@ export function RootNavigator() {
             <Stack.Screen name="Book" component={BookScreen} />
             <Stack.Screen name="Thread" component={ThreadScreen} />
             <Stack.Screen name="MyListings" component={MyListingsScreen} />
+            <Stack.Screen name="EditListing" component={EditListingScreen} />
+            <Stack.Screen name="UserReviews" component={UserReviewsScreen} />
           </>
         )}
       </Stack.Navigator>

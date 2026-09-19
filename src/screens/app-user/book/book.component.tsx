@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button,
@@ -14,6 +14,23 @@ import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
 import { useStyles } from './book.styles';
 import type { BookScreenProps } from './book.types';
+
+const reviewCountLabel = (count: number) => {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  if (lastDigit === 1 && lastTwoDigits !== 11) {
+    return `${count} відгук`;
+  }
+  if (
+    lastDigit >= 2 &&
+    lastDigit <= 4 &&
+    (lastTwoDigits < 12 || lastTwoDigits > 14)
+  ) {
+    return `${count} відгуки`;
+  }
+  return `${count} відгуків`;
+};
 
 export function BookScreen({ navigation, route }: BookScreenProps) {
   const insets = useSafeAreaInsets();
@@ -67,17 +84,39 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
         <Text style={styles.title}>{book.title}</Text>
         <Text style={styles.author}>{book.author}</Text>
         <Text style={common.body}>{book.about}</Text>
-        <View style={styles.seller}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!book.sellerId}
+          onPress={() => {
+            if (book.sellerId) {
+              navigation.navigate('UserReviews', {
+                userId: book.sellerId,
+                displayName: book.seller,
+              });
+            }
+          }}
+          style={({ pressed }) => [
+            styles.seller,
+            pressed && styles.sellerPressed,
+          ]}
+        >
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{book.seller[0]}</Text>
           </View>
-          <View>
+          <View style={styles.sellerInfo}>
             <Text style={styles.sellerName}>{book.seller}</Text>
             <Text style={common.meta}>
-              ★ {book.rating} · {book.city} · {book.sellerAds}
+              ★ {book.rating} ·{' '}
+              {book.reviewsCount
+                ? reviewCountLabel(book.reviewsCount)
+                : 'без відгуків'}
+            </Text>
+            <Text style={common.meta}>
+              {book.city} · {book.sellerAds}
             </Text>
           </View>
-        </View>
+          <Text style={styles.sellerArrow}>›</Text>
+        </Pressable>
         <Button
           label={
             isOwnListing

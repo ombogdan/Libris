@@ -50,10 +50,39 @@ export const useStyles = createStyles(({ theme, scale }: any) =>
       color: theme.palette.text,
       fontWeight: '700',
     },
+    topicRow: {
+      minHeight: scale(20),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scale(7),
+      marginTop: scale(3),
+    },
     topic: {
+      flex: 1,
       fontSize: scale(11),
       color: theme.palette.accent700,
-      marginTop: scale(3),
+    },
+    archiveBadge: {
+      flexShrink: 0,
+      minHeight: scale(20),
+      paddingHorizontal: scale(7),
+      borderRadius: scale(999),
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.palette.accent200,
+    },
+    archiveBadgeDeleted: {
+      borderWidth: scale(1),
+      borderColor: theme.palette.error,
+      backgroundColor: theme.palette.background,
+    },
+    archiveBadgeText: {
+      color: theme.palette.accent800,
+      fontSize: scale(9.5),
+      fontWeight: '800',
+    },
+    archiveBadgeDeletedText: {
+      color: theme.palette.error,
     },
     unread: {
       minWidth: scale(22),

@@ -35,7 +35,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
       store.books.filter(book => {
         const normalizedQuery = query.toLowerCase();
         return (
-          book.status !== 'hidden' &&
+          book.status === 'active' &&
           (!normalizedQuery ||
             `${book.title} ${book.author} ${book.cat} ${book.city}`
               .toLowerCase()

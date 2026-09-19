@@ -11,6 +11,12 @@ export function ChatItem({ chat, onPress }: ChatItemProps) {
   const lastMessage =
     chat.lastMessage || chat.msgs.at(-1)?.text || 'Почніть розмову';
   const unreadCount = Math.max(chat.unreadCount, chat.unread ? 1 : 0);
+  const archiveLabel =
+    chat.archiveReason === 'sold'
+      ? 'Продано'
+      : chat.archiveReason === 'deleted'
+      ? 'Видалено'
+      : 'Архів';
 
   return (
     <Pressable
@@ -39,9 +45,29 @@ export function ChatItem({ chat, onPress }: ChatItemProps) {
         >
           {lastMessage}
         </Text>
-        <Text numberOfLines={1} style={styles.topic}>
-          {chat.about}
-        </Text>
+        <View style={styles.topicRow}>
+          <Text numberOfLines={1} style={styles.topic}>
+            {chat.about}
+          </Text>
+          {chat.section === 'archive' ? (
+            <View
+              style={[
+                styles.archiveBadge,
+                chat.archiveReason === 'deleted' && styles.archiveBadgeDeleted,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.archiveBadgeText,
+                  chat.archiveReason === 'deleted' &&
+                    styles.archiveBadgeDeletedText,
+                ]}
+              >
+                {archiveLabel}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
       {unreadCount > 0 ? (
         <View style={styles.unread}>

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   RefreshControl,
@@ -19,7 +19,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type {
+  KeyboardEvent,
+  KeyboardEventName,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Chip, Empty, ScreenHeader } from 'shared/components/ui';
@@ -27,6 +33,8 @@ import type { Message } from 'shared/data';
 import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { MessageBubble } from './components/message-bubble';
+import { ReviewBanner } from './components/review-banner';
+import { ReviewModal } from './components/review-modal';
 import { useStyles } from './thread.styles';
 import type { ThreadScreenProps } from './thread.types';
 
@@ -61,9 +69,16 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   const pullingToRefresh = useRef(false);
   const refreshing = useRef(false);
   const loadingOlder = useRef(false);
+  const pageFrame = useRef({ y: 0, height: 0 });
+  const [keyboardPadding, setKeyboardPadding] = useState(0);
+  const [overlayHeight, setOverlayHeight] = useState(0);
+  const [reviewVisible, setReviewVisible] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   const lastMessageId = chat?.msgs.at(-1)?.id;
   const initial = chat?.name.trim().charAt(0).toUpperCase() || '?';
+  const isDeleted = chat?.archiveReason === 'deleted';
 
   useEffect(() => {
     didInitialScroll.current = false;
@@ -77,10 +92,12 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         return undefined;
       }
 
+      void reloadChats({ silent: true }).catch(() => undefined);
       void loadChatMessages(activeChatId, { refresh: true }).catch(
         () => undefined,
       );
       const interval = setInterval(() => {
+        void reloadChats({ silent: true }).catch(() => undefined);
         void loadChatMessages(activeChatId, {
           refresh: true,
           silent: true,
@@ -104,7 +121,10 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
       return () => cancelAnimationFrame(frame);
     }
-  }, [chat?.messagesLoaded, lastMessageId]);
+    // overlayHeight is included so the initial scroll re-anchors once the
+    // floating composer's real height is measured (it starts at 0), instead
+    // of settling on a stale end position computed before that layout pass.
+  }, [chat?.messagesLoaded, lastMessageId, overlayHeight]);
 
   const refreshMessages = useCallback(() => {
     if (
@@ -159,6 +179,47 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
     loadOlder,
   ]);
 
+  const handlePageLayout = useCallback((event: LayoutChangeEvent) => {
+    const { y, height } = event.nativeEvent.layout;
+    pageFrame.current = { y, height };
+  }, []);
+
+  const handleOverlayLayout = useCallback((event: LayoutChangeEvent) => {
+    setOverlayHeight(event.nativeEvent.layout.height);
+  }, []);
+
+  const applyKeyboardMetrics = useCallback(
+    (event: KeyboardEvent) => {
+      const { y, height } = pageFrame.current;
+      // `page` is measured relative to the root SafeAreaView, which already
+      // shifted everything down by insets.top, while the keyboard's
+      // screenY is in true window coordinates — add it back to compare.
+      const overlap = insets.top + y + height - event.endCoordinates.screenY;
+      Keyboard.scheduleLayoutAnimation(event);
+      setKeyboardPadding(Math.max(overlap, 0));
+    },
+    [insets.top],
+  );
+
+  useEffect(() => {
+    const showEvent: KeyboardEventName =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent: KeyboardEventName =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const frameEvent: KeyboardEventName =
+      Platform.OS === 'ios'
+        ? 'keyboardWillChangeFrame'
+        : 'keyboardDidChangeFrame';
+
+    const subscriptions = [
+      Keyboard.addListener(showEvent, applyKeyboardMetrics),
+      Keyboard.addListener(hideEvent, applyKeyboardMetrics),
+      Keyboard.addListener(frameEvent, applyKeyboardMetrics),
+    ];
+
+    return () => subscriptions.forEach(subscription => subscription.remove());
+  }, [applyKeyboardMetrics]);
+
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, contentSize, layoutMeasurement } =
@@ -189,14 +250,40 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
   const submit = useCallback(() => {
     const text = draft.trim();
-    if (!activeChatId || !text) {
+    if (!activeChatId || !text || isDeleted) {
       return;
     }
 
     setDraft('');
     nearBottom.current = true;
     void sendMessage(activeChatId, text).catch(() => undefined);
-  }, [activeChatId, draft, sendMessage]);
+  }, [activeChatId, draft, isDeleted, sendMessage]);
+
+  const submitReview = useCallback(
+    (review: { rating: 1 | 2 | 3 | 4 | 5; comment: string }) => {
+      if (!activeChatId || reviewSubmitting) {
+        return;
+      }
+
+      setReviewSubmitting(true);
+      setReviewError(null);
+      void app
+        .submitReview(activeChatId, review.rating, review.comment)
+        .then(() => {
+          setReviewVisible(false);
+          app.notify('Відгук опубліковано');
+        })
+        .catch(error => {
+          setReviewError(
+            error && typeof error === 'object' && 'message' in error
+              ? String(error.message)
+              : 'Не вдалося опублікувати відгук.',
+          );
+        })
+        .finally(() => setReviewSubmitting(false));
+    },
+    [activeChatId, app, reviewSubmitting],
+  );
 
   const retryMessage = useCallback(
     (message: Message) => {
@@ -306,86 +393,109 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
     chat.messagesError && !chat.messagesLoaded && !chat.msgs.length;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.screen}>
-        <ScreenHeader onBack={navigation.goBack}>
-          <View style={styles.contact}>
-            <View style={styles.avatar}>
-              {chat.avatarUrl ? (
-                <Image
-                  source={{ uri: chat.avatarUrl }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={styles.avatarText}>{initial}</Text>
-              )}
-            </View>
-            <View style={styles.contactDetails}>
-              <Text numberOfLines={1} style={styles.name}>
-                {chat.name}
-              </Text>
-              <Text numberOfLines={1} style={styles.topic}>
-                {chat.about}
-              </Text>
-            </View>
-          </View>
-        </ScreenHeader>
-
-        <View style={styles.page}>
-          {initialLoading ? (
-            <View style={styles.centeredState}>
-              <ActivityIndicator size="large" color={theme.palette.accent} />
-              <Text style={styles.stateText}>Завантажуємо повідомлення…</Text>
-            </View>
-          ) : initialError ? (
-            <View style={styles.initialError}>
-              <Empty text="Не вдалося завантажити повідомлення. Перевір з’єднання та спробуй ще раз." />
-              <Button
-                secondary
-                label="Спробувати ще раз"
-                onPress={refreshMessages}
+    <View style={styles.screen}>
+      <ScreenHeader onBack={navigation.goBack}>
+        <View style={styles.contact}>
+          <View style={styles.avatar}>
+            {chat.avatarUrl ? (
+              <Image
+                source={{ uri: chat.avatarUrl }}
+                style={styles.avatarImage}
               />
-            </View>
-          ) : (
-            <FlatList
-              ref={listRef}
-              data={chat.msgs}
-              keyExtractor={message => message.id}
-              renderItem={renderMessage}
-              style={styles.messagesList}
-              contentContainerStyle={[
-                styles.messages,
-                !chat.msgs.length && styles.emptyMessages,
-              ]}
-              ListHeaderComponent={historyHeader}
-              ListEmptyComponent={
-                <Text style={styles.emptyMessagesText}>
-                  Напиши перше повідомлення про цю книгу
-                </Text>
-              }
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshingMessages}
-                  onRefresh={refreshMessages}
-                  colors={[theme.palette.accent]}
-                  tintColor={theme.palette.accent}
-                />
-              }
-              maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-              keyboardDismissMode="interactive"
-              keyboardShouldPersistTaps="handled"
-              onScroll={handleScroll}
-              onScrollEndDrag={maybeLoadOlder}
-              onMomentumScrollEnd={maybeLoadOlder}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
+            ) : (
+              <Text style={styles.avatarText}>{initial}</Text>
+            )}
+          </View>
+          <View style={styles.contactDetails}>
+            <Text numberOfLines={1} style={styles.name}>
+              {chat.name}
+            </Text>
+            <Text numberOfLines={1} style={styles.topic}>
+              {chat.about}
+            </Text>
+          </View>
+        </View>
+      </ScreenHeader>
 
-          {!initialLoading && !initialError ? (
+      <ReviewBanner
+        listingStatus={
+          chat.archiveReason === 'deleted'
+            ? 'deleted'
+            : chat.archiveReason === 'sold'
+            ? 'sold'
+            : 'active'
+        }
+        otherUserName={chat.name}
+        canReview={chat.canReview}
+        submittedRating={chat.myReviewRating}
+        onLeaveReview={() => {
+          setReviewError(null);
+          setReviewVisible(true);
+        }}
+      />
+
+      <View style={styles.page} onLayout={handlePageLayout}>
+        {initialLoading ? (
+          <View
+            style={[styles.centeredState, { paddingBottom: overlayHeight }]}
+          >
+            <ActivityIndicator size="large" color={theme.palette.accent} />
+            <Text style={styles.stateText}>Завантажуємо повідомлення…</Text>
+          </View>
+        ) : initialError ? (
+          <View style={[styles.initialError, { paddingBottom: overlayHeight }]}>
+            <Empty text="Не вдалося завантажити повідомлення. Перевір з’єднання та спробуй ще раз." />
+            <Button
+              secondary
+              label="Спробувати ще раз"
+              onPress={refreshMessages}
+            />
+          </View>
+        ) : (
+          <FlatList
+            ref={listRef}
+            data={chat.msgs}
+            keyExtractor={message => message.id}
+            renderItem={renderMessage}
+            style={styles.messagesList}
+            contentContainerStyle={[
+              styles.messages,
+              !chat.msgs.length && styles.emptyMessages,
+              {
+                paddingBottom:
+                  styles.messagesBottomBase + overlayHeight + keyboardPadding,
+              },
+            ]}
+            ListHeaderComponent={historyHeader}
+            ListEmptyComponent={
+              <Text style={styles.emptyMessagesText}>
+                Напиши перше повідомлення про цю книгу
+              </Text>
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshingMessages}
+                onRefresh={refreshMessages}
+                colors={[theme.palette.accent]}
+                tintColor={theme.palette.accent}
+              />
+            }
+            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+            keyboardDismissMode="none"
+            keyboardShouldPersistTaps="always"
+            onScroll={handleScroll}
+            onScrollEndDrag={maybeLoadOlder}
+            onMomentumScrollEnd={maybeLoadOlder}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+        <View
+          style={[styles.overlay, { bottom: keyboardPadding }]}
+          onLayout={handleOverlayLayout}
+        >
+          {!isDeleted && !initialLoading && !initialError ? (
             <ScrollView
               horizontal
               style={styles.quickList}
@@ -406,37 +516,56 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
             </ScrollView>
           ) : null}
 
-          <View style={styles.compose}>
-            <TextInput
-              ref={inputRef}
-              style={styles.input}
-              value={draft}
-              onChangeText={setDraft}
-              onSubmitEditing={submit}
-              placeholder="Повідомлення…"
-              placeholderTextColor={styles.colors.placeholder}
-              multiline
-              submitBehavior="submit"
-              returnKeyType="send"
-              textAlignVertical="center"
-              maxLength={2000}
-            />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Надіслати повідомлення"
-              disabled={!draft.trim()}
-              onPress={submit}
-              style={({ pressed }) => [
-                styles.send,
-                !draft.trim() && styles.sendDisabled,
-                pressed && styles.sendPressed,
-              ]}
-            >
-              <Text style={styles.sendText}>↑</Text>
-            </Pressable>
-          </View>
+          {isDeleted ? (
+            <View style={styles.readOnlyComposer}>
+              <Text style={styles.readOnlyText}>
+                Оголошення видалено. Ця переписка доступна лише для читання.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.compose}>
+              <TextInput
+                ref={inputRef}
+                style={styles.input}
+                value={draft}
+                onChangeText={setDraft}
+                onSubmitEditing={submit}
+                placeholder="Повідомлення…"
+                placeholderTextColor={styles.colors.placeholder}
+                multiline
+                submitBehavior="submit"
+                returnKeyType="send"
+                textAlignVertical="center"
+                maxLength={1000}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Надіслати повідомлення"
+                disabled={!draft.trim()}
+                onPress={submit}
+                style={({ pressed }) => [
+                  styles.send,
+                  !draft.trim() && styles.sendDisabled,
+                  pressed && styles.sendPressed,
+                ]}
+              >
+                <Text style={styles.sendText}>↑</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       </View>
-    </KeyboardAvoidingView>
+      <ReviewModal
+        visible={reviewVisible}
+        recipientName={chat.name}
+        isSubmitting={reviewSubmitting}
+        error={reviewError}
+        onClose={() => {
+          setReviewVisible(false);
+          setReviewError(null);
+        }}
+        onSubmit={submitReview}
+      />
+    </View>
   );
 }

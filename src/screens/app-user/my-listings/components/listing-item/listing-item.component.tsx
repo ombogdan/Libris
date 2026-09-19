@@ -1,27 +1,85 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { Cover, PricePill } from 'shared/components/ui';
 import { useStyles } from './listing-item.styles';
 import type { ListingItemProps } from './listing-item.types';
 
-export function ListingItem({ ad }: ListingItemProps) {
+export function ListingItem({
+  ad,
+  disabled = false,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+}: ListingItemProps) {
   const styles = useStyles();
+  const isSold = ad.status === 'Продано';
 
   return (
-    <View style={styles.row}>
-      <Cover
-        book={{ title: ad.title, tone: ad.tone, imageUrls: ad.imageUrls }}
-      />
-      <View style={styles.info}>
-        <Text style={styles.title}>{ad.title}</Text>
-        <View style={styles.inline}>
-          <PricePill value={ad.price} />
-          <View style={styles.status}>
-            <Text style={styles.statusText}>{ad.status}</Text>
+    <View style={[styles.card, disabled && styles.disabled]}>
+      <Pressable
+        accessibilityRole="button"
+        disabled={disabled}
+        onPress={onEdit}
+        style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      >
+        <Cover
+          book={{ title: ad.title, tone: ad.tone, imageUrls: ad.imageUrls }}
+        />
+        <View style={styles.info}>
+          <Text numberOfLines={2} style={styles.title}>
+            {ad.title}
+          </Text>
+          <View style={styles.inline}>
+            <PricePill value={ad.price} />
+            <View style={[styles.status, isSold && styles.statusSold]}>
+              <Text
+                style={[styles.statusText, isSold && styles.statusSoldText]}
+              >
+                {ad.status}
+              </Text>
+            </View>
           </View>
+          <Text style={styles.meta}>{ad.stats}</Text>
         </View>
-        <Text style={styles.meta}>{ad.stats}</Text>
+      </Pressable>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled}
+          onPress={onEdit}
+          style={({ pressed }) => [
+            styles.actionButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.actionText}>Редагувати</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled}
+          onPress={onToggleStatus}
+          style={({ pressed }) => [
+            styles.actionButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.actionText}>
+            {isSold ? 'Активувати' : 'Продано'}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled}
+          onPress={onDelete}
+          style={({ pressed }) => [
+            styles.actionButton,
+            styles.deleteButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.deleteText}>Видалити</Text>
+        </Pressable>
       </View>
     </View>
   );

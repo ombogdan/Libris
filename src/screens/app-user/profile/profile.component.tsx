@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,7 +19,13 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const app = useAppStore();
-  const { session, profile, profileError, updateProfile } = useAuth();
+  const {
+    session,
+    profile,
+    profileError,
+    refreshProfile,
+    updateProfile,
+  } = useAuth();
   const [editingField, setEditingField] = useState<EditableProfileField | null>(
     null,
   );
@@ -40,6 +47,12 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const meta = [city, email, createdYear ? `з ${createdYear}` : '']
     .filter(Boolean)
     .join(' · ');
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshProfile();
+    }, [refreshProfile]),
+  );
 
   const editValue = useMemo(() => {
     if (editingField === 'display_name') {
@@ -155,6 +168,24 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
             label="Обране"
             value={String(app.favs.length)}
             onPress={() => navigation.navigate('Favorites')}
+          />
+          <ProfileRow
+            label="Мої відгуки"
+            value={
+              profile?.review_count
+                ? `${profile.rating_average
+                    .toFixed(1)
+                    .replace('.', ',')} · ${profile.review_count}`
+                : 'Ще немає'
+            }
+            onPress={() => {
+              if (session?.user.id) {
+                navigation.getParent()?.navigate('UserReviews', {
+                  userId: session.user.id,
+                  displayName: name,
+                });
+              }
+            }}
           />
           <ProfileRow
             label="Місто"

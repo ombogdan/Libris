@@ -29,6 +29,13 @@ export const useStyles = createStyles(
         alignItems: 'center',
         gap: scale(12),
       },
+      sellerPressed: { opacity: 0.72 },
+      sellerInfo: { flex: 1, gap: scale(2) },
+      sellerArrow: {
+        color: theme.palette.neutral500,
+        fontSize: scale(26),
+        lineHeight: scale(30),
+      },
       avatar: {
         width: scale(46),
         height: scale(46),

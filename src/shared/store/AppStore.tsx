@@ -19,7 +19,16 @@ import type {
   ChatMessage,
   ListingSellerProfile,
 } from 'services/supabase/database.types';
-import { removeBookImages, uploadBookImages } from 'services/books';
+import {
+  getBookImagePath,
+  markBookListingSold,
+  reactivateBookListing,
+  registerBookListingImages,
+  removeBookImages,
+  removeBookListingImageRecords,
+  softDeleteBookListing,
+  uploadBookImages,
+} from 'services/books';
 import type { LocalBookImage } from 'services/books';
 import {
   addFavorite,
@@ -33,6 +42,7 @@ import {
   markChatConversationRead,
   sendChatMessage,
 } from 'services/chats';
+import { submitConversationReview } from 'services/reviews';
 
 type AddForm = {
   title: string;
@@ -46,6 +56,10 @@ type AddForm = {
   longitude: number | null;
   images: LocalBookImage[];
 };
+type UpdateListingForm = Omit<AddForm, 'images'> & {
+  retainedImageUrls: string[];
+  newImages: LocalBookImage[];
+};
 type Store = {
   books: Book[];
   booksLoading: boolean;
@@ -58,6 +72,16 @@ type Store = {
   toggleFav: (id: string) => Promise<void>;
   ads: Ad[];
   publish: (form: AddForm) => Promise<Book>;
+  updateListing: (
+    id: string,
+    form: UpdateListingForm,
+  ) => Promise<{ book: Book; imageCleanupFailed: boolean }>;
+  setListingStatus: (
+    id: string,
+    status: 'active' | 'sold',
+    conversationId?: string | null,
+  ) => Promise<void>;
+  deleteListing: (id: string) => Promise<void>;
   chats: Chat[];
   chatsLoading: boolean;
   chatsError: string | null;
@@ -70,6 +94,11 @@ type Store = {
   loadOlderMessages: (chatId: string) => Promise<void>;
   send: (chatId: string, text: string) => Promise<void>;
   retryMessage: (chatId: string, messageId: string) => Promise<void>;
+  submitReview: (
+    chatId: string,
+    rating: number,
+    comment: string,
+  ) => Promise<void>;
   toast: string;
   notify: (text: string) => void;
 };
@@ -156,6 +185,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const favoriteMutations = useRef(new Set<string>());
   const chatsRef = useRef<Chat[]>([]);
   const chatsRequest = useRef(0);
+  const messageRequestSequence = useRef(0);
   const messageRequests = useRef(new Map<string, number>());
   const olderMessageRequests = useRef(new Set<string>());
 
@@ -218,6 +248,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         unreadCount: row.unread_count,
         lastMessage,
         lastMessageAt,
+        section: row.section,
+        archivedAt: row.archived_at,
+        archiveReason: row.archive_reason,
+        canReview: row.can_review,
+        myReviewRating: row.my_review_rating,
         msgs: existing?.msgs ?? [],
         messagesLoaded: existing?.messagesLoaded ?? false,
         messagesLoading: existing?.messagesLoading ?? false,
@@ -310,8 +345,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       if (chat.messagesLoaded && !options?.refresh) {
         return;
       }
+      if (messageRequests.current.has(chatId)) {
+        return;
+      }
 
-      const request = (messageRequests.current.get(chatId) ?? 0) + 1;
+      const request = ++messageRequestSequence.current;
       messageRequests.current.set(chatId, request);
       updateChats(current =>
         current.map(item =>
@@ -375,6 +413,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
                 : item,
             ),
           );
+        }
+      } finally {
+        if (messageRequests.current.get(chatId) === request) {
+          messageRequests.current.delete(chatId);
         }
       }
     },
@@ -561,8 +603,13 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         cat: row.category,
         condition: row.condition,
         city: row.city,
+        latitude: row.latitude,
+        longitude: row.longitude,
         seller: sellerName || 'Користувач',
-        rating: '—',
+        rating: sellerProfile?.review_count
+          ? sellerProfile.rating_average.toFixed(1).replace('.', ',')
+          : '—',
+        reviewsCount: sellerProfile?.review_count ?? 0,
         sellerAds: formatListingsCount(
           sellerProfile?.listings_count ?? visibleListingsCount,
         ),
@@ -641,6 +688,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     const userId = session?.user.id;
     const displayName = profile?.display_name.trim();
+    const reviewsCount = profile?.review_count ?? 0;
+    const rating = reviewsCount
+      ? (profile?.rating_average ?? 0).toFixed(1).replace('.', ',')
+      : '—';
 
     if (!userId || !displayName) {
       return;
@@ -649,17 +700,35 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     setBooks(current => {
       let changed = false;
       const next = current.map(book => {
-        if (book.sellerId !== userId || book.seller === displayName) {
+        if (book.sellerId !== userId) {
+          return book;
+        }
+
+        if (
+          book.seller === displayName &&
+          book.rating === rating &&
+          book.reviewsCount === reviewsCount
+        ) {
           return book;
         }
 
         changed = true;
-        return { ...book, seller: displayName };
+        return {
+          ...book,
+          seller: displayName,
+          rating,
+          reviewsCount,
+        };
       });
 
       return changed ? next : current;
     });
-  }, [profile?.display_name, session?.user.id]);
+  }, [
+    profile?.display_name,
+    profile?.rating_average,
+    profile?.review_count,
+    session?.user.id,
+  ]);
 
   const publish = useCallback(
     async (f: AddForm) => {
@@ -703,6 +772,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       }
 
       let uploadedPaths: string[] = [];
+      let imageRecordsRegistered = false;
       let listing = data;
       try {
         const uploaded = await uploadBookImages(
@@ -711,6 +781,15 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           f.images,
         );
         uploadedPaths = uploaded.paths;
+        await registerBookListingImages(
+          data.id,
+          uploaded.paths.map((path, index) => ({
+            path,
+            url: uploaded.urls[index],
+            position: index,
+          })),
+        );
+        imageRecordsRegistered = true;
         const { data: updated, error: updateError } = await supabase
           .from('book_listings')
           .update({
@@ -726,21 +805,193 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         }
         listing = updated;
       } catch (uploadError) {
-        await Promise.allSettled([
-          removeBookImages(uploadedPaths),
-          supabase.from('book_listings').delete().eq('id', data.id),
-        ]);
+        let storageRemoved = false;
+        try {
+          await removeBookImages(uploadedPaths);
+          storageRemoved = true;
+        } catch {
+          // The registered paths stay queued for the deferred cleanup.
+        }
+        if (storageRemoved && imageRecordsRegistered) {
+          await removeBookListingImageRecords(data.id, uploadedPaths).catch(
+            () => undefined,
+          );
+        }
+        await softDeleteBookListing(data.id).catch(() => undefined);
         throw uploadError;
       }
 
-      const book = toBook(listing);
+      const ownActiveListings = books.filter(
+        book =>
+          book.sellerId === session.user.id && book.status === 'active',
+      ).length;
+      const book = {
+        ...toBook(listing),
+        rating: profile?.review_count
+          ? profile.rating_average.toFixed(1).replace('.', ',')
+          : '—',
+        reviewsCount: profile?.review_count ?? 0,
+        sellerAds: formatListingsCount(ownActiveListings + 1),
+      };
       setBooks(current => [
         book,
         ...current.filter(item => item.id !== book.id),
       ]);
       return book;
     },
-    [profile?.display_name, session, toBook],
+    [books, profile, session, toBook],
+  );
+
+  const updateListing = useCallback(
+    async (id: string, form: UpdateListingForm) => {
+      const userId = session?.user.id;
+      const currentBook = books.find(book => book.id === id);
+      if (!userId || !currentBook || currentBook.sellerId !== userId) {
+        throw new Error('Не вдалося знайти це оголошення.');
+      }
+      if (form.latitude === null || form.longitude === null) {
+        throw new Error('Не вдалося визначити координати міста.');
+      }
+
+      const originalImageUrls = currentBook.imageUrls ?? [];
+      const originalImageSet = new Set(originalImageUrls);
+      const retainedImageUrls = form.retainedImageUrls.filter(
+        (url, index, values) =>
+          originalImageSet.has(url) && values.indexOf(url) === index,
+      );
+      const totalImages = retainedImageUrls.length + form.newImages.length;
+      if (totalImages < 1 || totalImages > 5) {
+        throw new Error('Залиши від одного до п’яти фото книги.');
+      }
+
+      let uploadedPaths: string[] = [];
+      let uploadedUrls: string[] = [];
+      if (form.newImages.length) {
+        const uploaded = await uploadBookImages(userId, id, form.newImages);
+        uploadedPaths = uploaded.paths;
+        uploadedUrls = uploaded.urls;
+        try {
+          await registerBookListingImages(
+            id,
+            uploaded.paths.map((path, index) => ({
+              path,
+              url: uploaded.urls[index],
+              position: retainedImageUrls.length + index,
+            })),
+          );
+        } catch (error) {
+          await removeBookImages(uploaded.paths).catch(() => undefined);
+          throw error;
+        }
+      }
+
+      const imageUrls = [...retainedImageUrls, ...uploadedUrls];
+      const { data, error } = await supabase
+        .from('book_listings')
+        .update({
+          title: form.title.trim(),
+          author: form.author.trim(),
+          price: form.free ? 0 : Number(form.price.replace(',', '.')),
+          condition: form.condition,
+          description: form.about.trim(),
+          city: form.city.trim(),
+          latitude: form.latitude,
+          longitude: form.longitude,
+          image_urls: imageUrls,
+          cover_url: imageUrls[0] ?? null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('seller_id', userId)
+        .select('*')
+        .single();
+
+      if (error) {
+        let storageRemoved = false;
+        try {
+          await removeBookImages(uploadedPaths);
+          storageRemoved = true;
+        } catch {
+          // Keep the registry row so a later listing purge can retry cleanup.
+        }
+        if (storageRemoved) {
+          await removeBookListingImageRecords(id, uploadedPaths).catch(
+            () => undefined,
+          );
+        }
+        throw error;
+      }
+
+      const updatedBook = {
+        ...toBook(data),
+        seller: currentBook.seller,
+        sellerAds: currentBook.sellerAds,
+        rating: currentBook.rating,
+        reviewsCount: currentBook.reviewsCount,
+      };
+      setBooks(current =>
+        current.map(book => (book.id === id ? updatedBook : book)),
+      );
+
+      const removedPaths = originalImageUrls
+        .filter(url => !retainedImageUrls.includes(url))
+        .map(getBookImagePath)
+        .filter((path): path is string => Boolean(path));
+      let imageCleanupFailed = false;
+      try {
+        await removeBookImages(removedPaths);
+        await removeBookListingImageRecords(id, removedPaths);
+      } catch {
+        imageCleanupFailed = true;
+      }
+
+      return { book: updatedBook, imageCleanupFailed };
+    },
+    [books, session, toBook],
+  );
+
+  const setListingStatus = useCallback(
+    async (
+      id: string,
+      status: 'active' | 'sold',
+      conversationId: string | null = null,
+    ) => {
+      const userId = session?.user.id;
+      const currentBook = books.find(book => book.id === id);
+      if (!userId || !currentBook || currentBook.sellerId !== userId) {
+        throw new Error('Не вдалося знайти це оголошення.');
+      }
+
+      if (status === 'sold') {
+        await markBookListingSold(id, conversationId);
+      } else {
+        await reactivateBookListing(id);
+      }
+
+      setBooks(current =>
+        current.map(book => (book.id === id ? { ...book, status } : book)),
+      );
+      await reloadChats({ silent: true });
+    },
+    [books, reloadChats, session?.user.id],
+  );
+
+  const deleteListing = useCallback(
+    async (id: string) => {
+      const userId = session?.user.id;
+      const currentBook = books.find(book => book.id === id);
+      if (!userId || !currentBook || currentBook.sellerId !== userId) {
+        throw new Error('Не вдалося знайти це оголошення.');
+      }
+
+      await softDeleteBookListing(id);
+
+      setBooks(current => current.filter(book => book.id !== id));
+      updateFavs(current => current.filter(listingId => listingId !== id));
+
+      await reloadChats({ silent: true });
+    },
+    [books, reloadChats, session?.user.id, updateFavs],
   );
 
   const ads: Ad[] = useMemo(
@@ -914,6 +1165,32 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     [notify, persistMessage, updateChats],
   );
 
+  const submitReview = useCallback(
+    async (chatId: string, rating: number, comment: string) => {
+      const chat = chatsRef.current.find(item => item.id === chatId);
+      if (!chat?.canReview) {
+        throw new Error('Відгук для цієї переписки недоступний.');
+      }
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        throw new Error('Обери оцінку від 1 до 5.');
+      }
+
+      await submitConversationReview(chatId, rating, comment);
+      updateChats(current =>
+        current.map(item =>
+          item.id === chatId
+            ? { ...item, canReview: false, myReviewRating: rating }
+            : item,
+        ),
+      );
+      await Promise.all([
+        reloadChats({ silent: true }),
+        reloadBooks(),
+      ]);
+    },
+    [reloadBooks, reloadChats, updateChats],
+  );
+
   const value: Store = {
     books,
     booksLoading,
@@ -926,6 +1203,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     toggleFav,
     ads,
     publish,
+    updateListing,
+    setListingStatus,
+    deleteListing,
     chats,
     chatsLoading,
     chatsError,
@@ -935,6 +1215,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     loadOlderMessages,
     send,
     retryMessage,
+    submitReview,
     toast,
     notify,
   };

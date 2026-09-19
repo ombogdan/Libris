@@ -10,6 +10,24 @@ export type LocalBookImage = {
   fileName: string;
 };
 
+export function getBookImagePath(publicUrl: string) {
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const markerIndex = publicUrl.indexOf(marker);
+  if (markerIndex < 0) {
+    return null;
+  }
+
+  const encodedPath = publicUrl
+    .slice(markerIndex + marker.length)
+    .split('?')[0];
+
+  try {
+    return decodeURIComponent(encodedPath);
+  } catch {
+    return encodedPath;
+  }
+}
+
 function filePath(uri: string) {
   return decodeURIComponent(uri.replace(/^file:\/\//, ''));
 }
@@ -63,6 +81,9 @@ export async function uploadBookImages(
 ) {
   const uploadedPaths: string[] = [];
   const urls: string[] = [];
+  const uploadId = `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
 
   try {
     for (let index = 0; index < images.length; index += 1) {
@@ -76,7 +97,9 @@ export async function uploadBookImages(
         );
       }
 
-      const path = `${userId}/${listingId}/${index + 1}.${format.extension}`;
+      const path = `${userId}/${listingId}/${uploadId}-${index + 1}.${
+        format.extension
+      }`;
       const { error } = await supabase.storage
         .from(BUCKET)
         .upload(path, imageBuffer, {
@@ -106,6 +129,9 @@ export async function uploadBookImages(
 
 export async function removeBookImages(paths: string[]) {
   if (paths.length) {
-    await supabase.storage.from(BUCKET).remove(paths);
+    const { error } = await supabase.storage.from(BUCKET).remove(paths);
+    if (error) {
+      throw error;
+    }
   }
 }

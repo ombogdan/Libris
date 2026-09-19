@@ -8,6 +8,8 @@ export type RootStackParamList = {
   Book: { bookId: string };
   Thread: { chatId: string };
   MyListings: undefined;
+  EditListing: { bookId: string };
+  UserReviews: { userId: string; displayName?: string };
 };
 export type TabParamList = {
   Feed: undefined;

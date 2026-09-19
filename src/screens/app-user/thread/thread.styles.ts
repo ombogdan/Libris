@@ -51,10 +51,16 @@ export const useStyles = createStyles(
       },
       messages: {
         flexGrow: 1,
-        justifyContent: 'flex-end',
         gap: scale(8),
         paddingHorizontal: scale(18),
-        paddingVertical: scale(12),
+        paddingTop: scale(12),
+      },
+      overlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: theme.palette.background,
       },
       emptyMessages: { justifyContent: 'center' },
       emptyMessagesText: {
@@ -157,6 +163,22 @@ export const useStyles = createStyles(
         borderTopColor: theme.palette.divider,
         backgroundColor: theme.palette.background,
       },
+      readOnlyComposer: {
+        minHeight: scale(66),
+        paddingHorizontal: scale(22),
+        paddingVertical: scale(14),
+        borderTopWidth: scale(1),
+        borderTopColor: theme.palette.divider,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.palette.background,
+      },
+      readOnlyText: {
+        color: theme.palette.neutral600,
+        fontSize: scale(12.5),
+        lineHeight: scale(18),
+        textAlign: 'center',
+      },
       input: {
         flex: 1,
         minHeight: scale(44),
@@ -190,5 +212,6 @@ export const useStyles = createStyles(
       },
     }),
     colors: { placeholder: theme.palette.neutral500 },
+    messagesBottomBase: scale(12),
   }),
 );
