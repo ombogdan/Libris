@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import React, {
   useCallback,
@@ -39,9 +40,9 @@ import { useStyles } from './thread.styles';
 import type { ThreadScreenProps } from './thread.types';
 
 const QUICK_MESSAGES = [
-  'Ще актуально?',
-  'Готова зустрітись сьогодні',
-  'Можна Новою поштою?',
+  t('thread.quickActual'),
+  t('thread.quickMeet'),
+  t('thread.quickDelivery'),
 ];
 
 const LOAD_OLDER_OFFSET = 56;
@@ -271,13 +272,13 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         .submitReview(activeChatId, review.rating, review.comment)
         .then(() => {
           setReviewVisible(false);
-          app.notify('Відгук опубліковано');
+          app.notify(t('reviews.published'));
         })
         .catch(error => {
           setReviewError(
             error && typeof error === 'object' && 'message' in error
               ? String(error.message)
-              : 'Не вдалося опублікувати відгук.',
+              : t('reviews.publishError'),
           );
         })
         .finally(() => setReviewSubmitting(false));
@@ -318,7 +319,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
       return (
         <View style={styles.historyState}>
           <ActivityIndicator size="small" color={theme.palette.accent} />
-          <Text style={styles.historyText}>Завантажуємо попередні…</Text>
+          <Text style={styles.historyText}>{t('thread.loadingPrevious')}</Text>
         </View>
       );
     }
@@ -333,11 +334,11 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
           <Text style={styles.historyErrorText}>{chat.messagesError}</Text>
           <View style={styles.historyActions}>
             <Pressable accessibilityRole="button" onPress={refreshMessages}>
-              <Text style={styles.historyRetry}>Оновити</Text>
+              <Text style={styles.historyRetry}>{t('common.refresh')}</Text>
             </Pressable>
             {chat.hasMoreMessages ? (
               <Pressable accessibilityRole="button" onPress={loadOlderMessages}>
-                <Text style={styles.historyRetry}>Попередні</Text>
+                <Text style={styles.historyRetry}>{t('thread.previous')}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -352,7 +353,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
           style={styles.loadOlderButton}
           onPress={loadOlderMessages}
         >
-          <Text style={styles.loadOlderText}>Завантажити попередні</Text>
+          <Text style={styles.loadOlderText}>{t('thread.loadPrevious')}</Text>
         </Pressable>
       );
     }
@@ -363,24 +364,24 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   if (!chat) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader title="Чат" onBack={navigation.goBack} />
+        <ScreenHeader title={t('thread.title')} onBack={navigation.goBack} />
         <View style={styles.missingState}>
           {app.chatsLoading ? (
             <>
               <ActivityIndicator size="large" color={theme.palette.accent} />
-              <Text style={styles.stateText}>Завантажуємо чат…</Text>
+              <Text style={styles.stateText}>{t('thread.loadingChat')}</Text>
             </>
           ) : app.chatsError ? (
             <>
-              <Empty text="Не вдалося відкрити чат. Перевір з’єднання та спробуй ще раз." />
+              <Empty text={t('thread.chatLoadError')} />
               <Button
                 secondary
-                label="Спробувати ще раз"
+                label={t('common.retry')}
                 onPress={() => void reloadChats()}
               />
             </>
           ) : (
-            <Empty text="Цей чат більше недоступний." />
+            <Empty text={t('thread.unavailable')} />
           )}
         </View>
       </View>
@@ -440,14 +441,14 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
             style={[styles.centeredState, { paddingBottom: overlayHeight }]}
           >
             <ActivityIndicator size="large" color={theme.palette.accent} />
-            <Text style={styles.stateText}>Завантажуємо повідомлення…</Text>
+            <Text style={styles.stateText}>{t('thread.loadingMessages')}</Text>
           </View>
         ) : initialError ? (
           <View style={[styles.initialError, { paddingBottom: overlayHeight }]}>
-            <Empty text="Не вдалося завантажити повідомлення. Перевір з’єднання та спробуй ще раз." />
+            <Empty text={t('thread.messagesLoadError')} />
             <Button
               secondary
-              label="Спробувати ще раз"
+              label={t('common.retry')}
               onPress={refreshMessages}
             />
           </View>
@@ -468,9 +469,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
             ]}
             ListHeaderComponent={historyHeader}
             ListEmptyComponent={
-              <Text style={styles.emptyMessagesText}>
-                Напиши перше повідомлення про цю книгу
-              </Text>
+              <Text style={styles.emptyMessagesText}>{t('thread.firstMessage')}</Text>
             }
             refreshControl={
               <RefreshControl
@@ -518,9 +517,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
           {isDeleted ? (
             <View style={styles.readOnlyComposer}>
-              <Text style={styles.readOnlyText}>
-                Оголошення видалено. Ця переписка доступна лише для читання.
-              </Text>
+              <Text style={styles.readOnlyText}>{t('thread.deletedReadonly')}</Text>
             </View>
           ) : (
             <View style={styles.compose}>
@@ -530,7 +527,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
                 value={draft}
                 onChangeText={setDraft}
                 onSubmitEditing={submit}
-                placeholder="Повідомлення…"
+                placeholder={t('thread.placeholder')}
                 placeholderTextColor={styles.colors.placeholder}
                 multiline
                 submitBehavior="submit"
@@ -540,7 +537,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
               />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Надіслати повідомлення"
+                accessibilityLabel={t('thread.sendLabel')}
                 disabled={!draft.trim()}
                 onPress={submit}
                 style={({ pressed }) => [

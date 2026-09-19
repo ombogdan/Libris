@@ -1,3 +1,9 @@
+import {
+  formatListingsCount,
+  formatRating,
+  localeTag,
+  t,
+} from 'shared/localization/i18n';
 import React, {
   useCallback,
   createContext,
@@ -105,19 +111,6 @@ type Store = {
 
 const AppStore = createContext<Store | null>(null);
 
-function formatListingsCount(count: number) {
-  const remainder10 = count % 10;
-  const remainder100 = count % 100;
-  const word =
-    remainder10 >= 1 &&
-    remainder10 <= 4 &&
-    (remainder100 < 11 || remainder100 > 14)
-      ? 'оголошення'
-      : 'оголошень';
-
-  return `${count} ${word}`;
-}
-
 function formatChatTime(value: string | null) {
   if (!value) {
     return '';
@@ -144,16 +137,16 @@ function formatChatTime(value: string | null) {
   );
 
   if (dayDifference === 0) {
-    return date.toLocaleTimeString('uk-UA', {
+    return date.toLocaleTimeString(localeTag, {
       hour: '2-digit',
       minute: '2-digit',
     });
   }
   if (dayDifference === 1) {
-    return 'Вчора';
+    return t('time.yesterday');
   }
 
-  return date.toLocaleDateString('uk-UA', {
+  return date.toLocaleDateString(localeTag, {
     day: '2-digit',
     month: '2-digit',
   });
@@ -231,7 +224,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const lastMessage = hasNewerLocalMessage
         ? existing?.lastMessage ?? ''
         : row.last_message_text ?? '';
-      const name = row.other_user_display_name.trim() || 'Користувач';
+      const name = row.other_user_display_name.trim() || t('common.user');
 
       return {
         id: row.conversation_id,
@@ -240,7 +233,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         name,
         avatarUrl: row.other_user_avatar_url,
         about: `${row.listing_title} · ${
-          row.listing_price ? `${row.listing_price} ₴` : 'Даром'
+          row.listing_price ? `${row.listing_price} ₴` : t('common.free')
         }`,
         coverUrl: row.listing_cover_url,
         time: formatChatTime(lastMessageAt ?? row.created_at),
@@ -301,7 +294,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           setChatsError(
             error && typeof error === 'object' && 'message' in error
               ? String(error.message)
-              : 'Не вдалося завантажити чати.',
+              : t('store.chatsLoadError'),
           );
         }
       } finally {
@@ -408,7 +401,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
                     messagesError:
                       error && typeof error === 'object' && 'message' in error
                         ? String(error.message)
-                        : 'Не вдалося завантажити повідомлення.',
+                        : t('store.messagesLoadError'),
                   }
                 : item,
             ),
@@ -479,7 +472,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
                   messagesError:
                     error && typeof error === 'object' && 'message' in error
                       ? String(error.message)
-                      : 'Не вдалося завантажити попередні повідомлення.',
+                      : t('store.previousMessagesError'),
                 }
               : item,
           ),
@@ -515,7 +508,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setFavoritesError(
           error && typeof error === 'object' && 'message' in error
             ? String(error.message)
-            : 'Не вдалося завантажити обране.',
+            : t('store.favoritesLoadError'),
         );
       }
     } finally {
@@ -537,7 +530,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     async (id: string) => {
       const userId = session?.user.id;
       if (!userId) {
-        notify('Увійди в акаунт, щоб зберігати обране');
+        notify(t('store.favoritesAuth'));
         return;
       }
       if (favoriteMutations.current.has(id)) {
@@ -573,9 +566,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setFavoritesError(
           error && typeof error === 'object' && 'message' in error
             ? String(error.message)
-            : 'Не вдалося оновити обране.',
+            : t('store.favoritesUpdateError'),
         );
-        notify('Не вдалося оновити обране');
+        notify(t('store.favoritesUpdateError'));
         void reloadFavorites();
       } finally {
         favoriteMutations.current.delete(id);
@@ -605,9 +598,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         city: row.city,
         latitude: row.latitude,
         longitude: row.longitude,
-        seller: sellerName || 'Користувач',
+        seller: sellerName || t('common.user'),
         rating: sellerProfile?.review_count
-          ? sellerProfile.rating_average.toFixed(1).replace('.', ',')
+          ? formatRating(sellerProfile.rating_average)
           : '—',
         reviewsCount: sellerProfile?.review_count ?? 0,
         sellerAds: formatListingsCount(
@@ -690,7 +683,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     const displayName = profile?.display_name.trim();
     const reviewsCount = profile?.review_count ?? 0;
     const rating = reviewsCount
-      ? (profile?.rating_average ?? 0).toFixed(1).replace('.', ',')
+      ? formatRating(profile?.rating_average ?? 0)
       : '—';
 
     if (!userId || !displayName) {
@@ -733,14 +726,14 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const publish = useCallback(
     async (f: AddForm) => {
       if (!session) {
-        throw new Error('Увійди в акаунт, щоб опублікувати книгу.');
+        throw new Error(t('store.publishAuth'));
       }
       if (f.latitude === null || f.longitude === null) {
-        throw new Error('Не вдалося визначити координати міста.');
+        throw new Error(t('store.cityCoordinatesError'));
       }
 
       if (!f.images.length || f.images.length > 5) {
-        throw new Error('Додай від одного до п’яти фото книги.');
+        throw new Error(t('store.addImagesError'));
       }
 
       const { data, error } = await supabase
@@ -750,7 +743,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           seller_name:
             profile?.display_name ||
             session.user.email?.split('@')[0] ||
-            'Користувач',
+            t('common.user'),
           title: f.title.trim(),
           author: f.author.trim(),
           price: f.free ? 0 : Number(f.price),
@@ -828,7 +821,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const book = {
         ...toBook(listing),
         rating: profile?.review_count
-          ? profile.rating_average.toFixed(1).replace('.', ',')
+          ? formatRating(profile.rating_average)
           : '—',
         reviewsCount: profile?.review_count ?? 0,
         sellerAds: formatListingsCount(ownActiveListings + 1),
@@ -847,10 +840,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const userId = session?.user.id;
       const currentBook = books.find(book => book.id === id);
       if (!userId || !currentBook || currentBook.sellerId !== userId) {
-        throw new Error('Не вдалося знайти це оголошення.');
+        throw new Error(t('store.listingMissing'));
       }
       if (form.latitude === null || form.longitude === null) {
-        throw new Error('Не вдалося визначити координати міста.');
+        throw new Error(t('store.cityCoordinatesError'));
       }
 
       const originalImageUrls = currentBook.imageUrls ?? [];
@@ -861,7 +854,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       );
       const totalImages = retainedImageUrls.length + form.newImages.length;
       if (totalImages < 1 || totalImages > 5) {
-        throw new Error('Залиши від одного до п’яти фото книги.');
+        throw new Error(t('store.keepImagesError'));
       }
 
       let uploadedPaths: string[] = [];
@@ -959,7 +952,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const userId = session?.user.id;
       const currentBook = books.find(book => book.id === id);
       if (!userId || !currentBook || currentBook.sellerId !== userId) {
-        throw new Error('Не вдалося знайти це оголошення.');
+        throw new Error(t('store.listingMissing'));
       }
 
       if (status === 'sold') {
@@ -981,7 +974,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const userId = session?.user.id;
       const currentBook = books.find(book => book.id === id);
       if (!userId || !currentBook || currentBook.sellerId !== userId) {
-        throw new Error('Не вдалося знайти це оголошення.');
+        throw new Error(t('store.listingMissing'));
       }
 
       await softDeleteBookListing(id);
@@ -1002,8 +995,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           id: book.id,
           title: book.title,
           price: book.price,
-          status: book.status === 'sold' ? 'Продано' : 'Активне',
-          stats: 'Опубліковано',
+          status: book.status === 'sold' ? 'sold' : 'active',
+          stats: t('myListings.published'),
           tone: book.tone,
           imageUrls: book.imageUrls,
         })),
@@ -1013,13 +1006,13 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     async (book: Book) => {
       const userId = session?.user.id;
       if (!userId) {
-        throw new Error('Увійди в акаунт, щоб написати продавцю.');
+        throw new Error(t('store.messageSellerAuth'));
       }
       if (!book.sellerId) {
-        throw new Error('Не вдалося визначити продавця оголошення.');
+        throw new Error(t('store.sellerMissing'));
       }
       if (book.sellerId === userId) {
-        throw new Error('Не можна створити чат із самим собою.');
+        throw new Error(t('store.selfChat'));
       }
 
       const conversationId = await getOrCreateListingConversation(book.id);
@@ -1028,7 +1021,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       const chat = next.find(item => item.id === conversationId);
 
       if (!chat) {
-        throw new Error('Не вдалося завантажити створений чат.');
+        throw new Error(t('store.createdChatLoadError'));
       }
 
       updateChats(() => next);
@@ -1041,7 +1034,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     async (chatId: string, localId: string, text: string) => {
       const userId = session?.user.id;
       if (!userId) {
-        throw new Error('Увійди в акаунт, щоб надіслати повідомлення.');
+        throw new Error(t('store.sendAuth'));
       }
 
       try {
@@ -1126,7 +1119,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       try {
         await persistMessage(chatId, localId, text);
       } catch {
-        notify('Не вдалося надіслати повідомлення');
+        notify(t('store.sendError'));
       }
     },
     [notify, persistMessage, session?.user.id, updateChats],
@@ -1159,7 +1152,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       try {
         await persistMessage(chatId, messageId, message.text);
       } catch {
-        notify('Повідомлення знову не надіслалося');
+        notify(t('store.resendError'));
       }
     },
     [notify, persistMessage, updateChats],
@@ -1169,10 +1162,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     async (chatId: string, rating: number, comment: string) => {
       const chat = chatsRef.current.find(item => item.id === chatId);
       if (!chat?.canReview) {
-        throw new Error('Відгук для цієї переписки недоступний.');
+        throw new Error(t('store.reviewUnavailable'));
       }
       if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-        throw new Error('Обери оцінку від 1 до 5.');
+        throw new Error(t('reviews.ratingError'));
       }
 
       await submitConversationReview(chatId, rating, comment);

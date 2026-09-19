@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
@@ -36,7 +37,7 @@ export function UserReviewsScreen({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const displayName = route.params.displayName?.trim() || 'Користувач';
+  const displayName = route.params.displayName?.trim() || t('common.user');
   const hasReviews = reviews.length > 0;
 
   const loadReviews = useCallback(
@@ -70,7 +71,7 @@ export function UserReviewsScreen({
         setError(
           loadError && typeof loadError === 'object' && 'message' in loadError
             ? String(loadError.message)
-            : 'Не вдалося завантажити відгуки.',
+            : t('reviews.loadError'),
         );
       } finally {
         setLoading(false);
@@ -96,7 +97,7 @@ export function UserReviewsScreen({
       return (
         <View style={styles.centeredState}>
           <ActivityIndicator size="large" color={theme.palette.accent} />
-          <Text style={styles.stateText}>Завантажуємо відгуки…</Text>
+          <Text style={styles.stateText}>{t('reviews.loading')}</Text>
         </View>
       );
     }
@@ -104,12 +105,10 @@ export function UserReviewsScreen({
     if (error) {
       return (
         <View style={styles.centeredState}>
-          <Text style={styles.errorText}>
-            Не вдалося завантажити відгуки. Перевір з’єднання та спробуй ще раз.
-          </Text>
+          <Text style={styles.errorText}>{t('reviews.loadError')}</Text>
           <Button
             secondary
-            label="Спробувати ще раз"
+            label={t('common.retry')}
             onPress={() => void loadReviews()}
           />
         </View>
@@ -121,16 +120,14 @@ export function UserReviewsScreen({
         <View style={styles.emptyIcon}>
           <Text style={styles.emptyIconText}>★</Text>
         </View>
-        <Text style={styles.stateText}>
-          У цього користувача ще немає відгуків.
-        </Text>
+        <Text style={styles.stateText}>{t('reviews.empty')}</Text>
       </View>
     );
   };
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Відгуки" onBack={navigation.goBack} />
+      <ScreenHeader title={t('reviews.title')} onBack={navigation.goBack} />
 
       <FlatList
         data={reviews}
@@ -147,11 +144,11 @@ export function UserReviewsScreen({
             {error && hasReviews ? (
               <View style={styles.inlineError}>
                 <Text style={styles.inlineErrorText}>
-                  Не вдалося оновити відгуки
+                  {t('reviews.updateError')}
                 </Text>
                 <Button
                   secondary
-                  label="Повторити"
+                  label={t('common.repeat')}
                   onPress={() => void loadReviews()}
                 />
               </View>

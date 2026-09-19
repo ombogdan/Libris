@@ -1,3 +1,4 @@
+import { formatRating, t } from 'shared/localization/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -35,16 +36,16 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const name =
     profile?.display_name.trim() ||
     session?.user.email?.split('@')[0] ||
-    'Користувач';
-  const city = profile?.city?.trim() || 'Не вказано';
-  const phone = profile?.phone || 'Не вказано';
+    t('common.user');
+  const city = profile?.city?.trim() || t('common.notSpecified');
+  const phone = profile?.phone || t('common.notSpecified');
   const email = profile?.email || session?.user.email || '';
   const createdYear = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
     : null;
-  const activeListings = app.ads.filter(ad => ad.status === 'Активне').length;
-  const soldListings = app.ads.filter(ad => ad.status === 'Продано').length;
-  const meta = [city, email, createdYear ? `з ${createdYear}` : '']
+  const activeListings = app.ads.filter(ad => ad.status === 'active').length;
+  const soldListings = app.ads.filter(ad => ad.status === 'sold').length;
+  const meta = [city, email, createdYear ? t('common.since', { year: createdYear }) : '']
     .filter(Boolean)
     .join(' · ');
 
@@ -91,7 +92,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     try {
       if (editingField === 'display_name') {
         if (trimmedValue.length < 2) {
-          throw new Error('Ім’я має містити щонайменше 2 символи.');
+          throw new Error(t('profile.nameError'));
         }
         await updateProfile({ display_name: trimmedValue });
       }
@@ -99,18 +100,18 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       if (editingField === 'phone') {
         const digits = trimmedValue.replace(/\D/g, '');
         if (digits.length !== 12 || !digits.startsWith('380')) {
-          throw new Error('Вкажи номер у форматі +380XXXXXXXXX.');
+          throw new Error(t('profile.phoneError'));
         }
         await updateProfile({ phone: `+${digits}` });
       }
 
       if (editingField === 'city') {
         if (trimmedValue.length < 2) {
-          throw new Error('Вкажи назву міста.');
+          throw new Error(t('profile.cityError'));
         }
         const location = await getCityCenter(trimmedValue);
         if (!location) {
-          throw new Error('Не вдалося знайти це місто. Перевір назву.');
+          throw new Error(t('listingForm.cityNotFound'));
         }
         await updateProfile({
           city: location.city,
@@ -124,7 +125,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       setEditError(
         error && typeof error === 'object' && 'message' in error
           ? String(error.message)
-          : 'Не вдалося оновити профіль.',
+          : t('profile.updateError'),
       );
     } finally {
       setIsSaving(false);
@@ -133,7 +134,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Профіль" />
+      <ScreenHeader title={t('profile.title')} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -148,35 +149,33 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         </View>
 
         <View style={styles.metrics}>
-          <ProfileMetric value={String(app.ads.length)} label="оголошення" />
-          <ProfileMetric value={String(activeListings)} label="активні" />
-          <ProfileMetric value={String(soldListings)} label="продано" />
+          <ProfileMetric value={String(app.ads.length)} label={t('profile.listings')} />
+          <ProfileMetric value={String(activeListings)} label={t('profile.active')} />
+          <ProfileMetric value={String(soldListings)} label={t('profile.sold')} />
         </View>
 
         <View style={styles.rows}>
           <ProfileRow
-            label="Ім’я"
+            label={t('profile.name')}
             value={name}
             onPress={() => openEditor('display_name')}
           />
           <ProfileRow
-            label="Мої оголошення"
+            label={t('profile.myListings')}
             value={String(app.ads.length)}
             onPress={() => navigation.getParent()?.navigate('MyListings')}
           />
           <ProfileRow
-            label="Обране"
+            label={t('profile.favorites')}
             value={String(app.favs.length)}
             onPress={() => navigation.navigate('Favorites')}
           />
           <ProfileRow
-            label="Мої відгуки"
+            label={t('profile.myReviews')}
             value={
               profile?.review_count
-                ? `${profile.rating_average
-                    .toFixed(1)
-                    .replace('.', ',')} · ${profile.review_count}`
-                : 'Ще немає'
+                  ? `${formatRating(profile.rating_average)} · ${profile.review_count}`
+                : t('common.noneYet')
             }
             onPress={() => {
               if (session?.user.id) {
@@ -188,12 +187,12 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
             }}
           />
           <ProfileRow
-            label="Місто"
+            label={t('profile.city')}
             value={city}
             onPress={() => openEditor('city')}
           />
           <ProfileRow
-            label="Телефон"
+            label={t('profile.phone')}
             value={phone}
             onPress={() => openEditor('phone')}
           />
@@ -202,10 +201,10 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         {profileError ? <Text style={styles.error}>{profileError}</Text> : null}
 
         {session ? (
-          <Button danger label="Вийти з акаунта" onPress={signOutFromGoogle} />
+          <Button danger label={t('profile.signOut')} onPress={signOutFromGoogle} />
         ) : (
           <Button
-            label="Увійти або створити акаунт"
+            label={t('profile.signIn')}
             onPress={() =>
               navigation
                 .getParent()

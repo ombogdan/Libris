@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -21,7 +22,7 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Обране" />
+      <ScreenHeader title={t('favorites.title')} />
 
       <ScrollView
         contentContainerStyle={styles.page}
@@ -38,10 +39,10 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
           </View>
         ) : store.favoritesError && !store.favs.length ? (
           <>
-            <Empty text="Не вдалося завантажити обране." />
+            <Empty text={t('favorites.loadError')} />
             <Button
               secondary
-              label="Спробувати ще раз"
+              label={t('common.retry')}
               onPress={store.reloadFavorites}
             />
           </>
@@ -59,10 +60,10 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
           ))
         ) : (
           <>
-            <Empty text="Тут будуть книги, які ти вподобаєш у стрічці." />
+            <Empty text={t('favorites.empty')} />
             <Button
               secondary
-              label="До стрічки"
+              label={t('favorites.toFeed')}
               onPress={() => navigation.navigate('Feed')}
             />
           </>

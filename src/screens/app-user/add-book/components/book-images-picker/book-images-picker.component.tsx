@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { Asset, launchImageLibrary } from 'react-native-image-picker';
@@ -73,8 +74,8 @@ export function BookImagesPicker({
     if (result.errorCode) {
       onError(
         result.errorCode === 'permission'
-          ? 'Дозволь доступ до фото в налаштуваннях пристрою.'
-          : 'Не вдалося відкрити галерею.',
+          ? t('images.permissionError')
+          : t('images.galleryError'),
       );
       return;
     }
@@ -84,7 +85,7 @@ export function BookImagesPicker({
       .map(normalizeImage)
       .filter((image): image is LocalBookImage => image !== null);
     if (selected.length !== assets.length) {
-      onError('Не вдалося отримати вибране фото. Спробуй обрати його ще раз.');
+      onError(t('images.selectionError'));
     }
     if (!selected.length) {
       return;
@@ -101,7 +102,7 @@ export function BookImagesPicker({
   return (
     <>
       <View style={styles.heading}>
-        <Text style={styles.label}>Фото книги</Text>
+        <Text style={styles.label}>{t('images.title')}</Text>
         <Text style={common.mini}>{images.length}/5</Text>
       </View>
       <ScrollView
@@ -114,7 +115,7 @@ export function BookImagesPicker({
             <Image source={{ uri: image.uri }} style={styles.image} />
             {index === 0 ? (
               <View style={styles.coverBadge}>
-                <Text style={styles.coverBadgeText}>Обкладинка</Text>
+                <Text style={styles.coverBadgeText}>{t('images.cover')}</Text>
               </View>
             ) : null}
             <Pressable
@@ -132,7 +133,7 @@ export function BookImagesPicker({
           <Pressable onPress={selectImages} style={styles.addButton}>
             <Text style={styles.plus}>＋</Text>
             <Text style={styles.addText}>
-              {images.length ? 'додати ще' : 'обрати з галереї'}
+              {images.length ? t('images.addMore') : t('images.choose')}
             </Text>
           </Pressable>
         ) : null}

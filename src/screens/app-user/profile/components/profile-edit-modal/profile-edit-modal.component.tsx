@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -26,22 +27,22 @@ const fieldConfig: Record<
   }
 > = {
   display_name: {
-    title: 'Редагувати ім’я',
-    label: 'Ім’я',
-    placeholder: 'Як тебе звати',
+    title: t('profile.editName'),
+    label: t('profile.name'),
+    placeholder: t('profile.namePlaceholder'),
     keyboardType: 'default',
     autoCapitalize: 'words',
   },
   city: {
-    title: 'Редагувати місто',
-    label: 'Місто',
-    placeholder: 'Наприклад, Полтава',
+    title: t('profile.editCity'),
+    label: t('profile.city'),
+    placeholder: t('listingForm.cityPlaceholder'),
     keyboardType: 'default',
     autoCapitalize: 'words',
   },
   phone: {
-    title: 'Редагувати телефон',
-    label: 'Телефон',
+    title: t('profile.editPhone'),
+    label: t('profile.phone'),
     placeholder: '+380XXXXXXXXX',
     keyboardType: 'phone-pad',
     autoCapitalize: 'none',
@@ -99,13 +100,13 @@ export function ProfileEditModal({
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Button
-            label={isSaving ? 'Зберігаємо…' : 'Зберегти'}
+            label={isSaving ? t('common.saving') : t('common.save')}
             disabled={isSaving}
             onPress={() => onSave(value)}
           />
           <Button
             secondary
-            label="Скасувати"
+            label={t('common.cancel')}
             disabled={isSaving}
             onPress={onClose}
           />

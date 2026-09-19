@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -25,10 +26,8 @@ export function ReviewBanner({
       <View style={[styles.card, styles.deletedCard]}>
         <Text style={styles.icon}>×</Text>
         <View style={styles.content}>
-          <Text style={styles.title}>Оголошення видалено</Text>
-          <Text style={styles.description}>
-            Переписка збережена в архіві. Залишити відгук уже не можна.
-          </Text>
+          <Text style={styles.title}>{t('reviews.deletedTitle')}</Text>
+          <Text style={styles.description}>{t('reviews.deletedText')}</Text>
         </View>
       </View>
     );
@@ -39,7 +38,7 @@ export function ReviewBanner({
       <View style={styles.card}>
         <Text style={styles.icon}>✓</Text>
         <View style={styles.content}>
-          <Text style={styles.title}>Відгук залишено</Text>
+          <Text style={styles.title}>{t('reviews.left')}</Text>
           <Text style={styles.rating}>{ratingStars(submittedRating)}</Text>
         </View>
       </View>
@@ -50,20 +49,20 @@ export function ReviewBanner({
     <View style={styles.card}>
       <Text style={styles.icon}>★</Text>
       <View style={styles.content}>
-        <Text style={styles.title}>Книгу продано</Text>
+        <Text style={styles.title}>{t('reviews.bookSold')}</Text>
         <Text style={styles.description}>
           {canReview
-            ? `Оціни спілкування з ${otherUserName || 'користувачем'}.`
-            : 'Переписка збережена в архіві.'}
+            ? t('reviews.rateUser', { name: otherUserName || t('common.userInContext') })
+            : t('reviews.archived')}
         </Text>
         {canReview && onLeaveReview ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Залишити відгук"
+            accessibilityLabel={t('reviews.leave')}
             onPress={onLeaveReview}
             style={({ pressed }) => [styles.action, pressed && styles.pressed]}
           >
-            <Text style={styles.actionText}>Залишити відгук</Text>
+            <Text style={styles.actionText}>{t('reviews.leave')}</Text>
           </Pressable>
         ) : null}
       </View>

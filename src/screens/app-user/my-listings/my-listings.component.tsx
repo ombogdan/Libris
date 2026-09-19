@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, { useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,11 +36,11 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
       setSellingBookId(null);
       store.notify(
         status === 'sold'
-          ? 'Книгу позначено проданою'
-          : 'Оголошення знову активне',
+          ? t('myListings.sold')
+          : t('myListings.active'),
       );
     } catch (error) {
-      store.notify(errorText(error, 'Не вдалося змінити статус.'));
+      store.notify(errorText(error, t('myListings.statusError')));
     } finally {
       setBusyId(null);
     }
@@ -61,9 +62,9 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
     setBusyId(id);
     try {
       await store.deleteListing(id);
-      store.notify('Оголошення перенесено до архіву');
+      store.notify(t('myListings.archived'));
     } catch (error) {
-      store.notify(errorText(error, 'Не вдалося видалити оголошення.'));
+      store.notify(errorText(error, t('myListings.deleteError')));
     } finally {
       setBusyId(null);
     }
@@ -71,12 +72,12 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
 
   const confirmDelete = (id: string) => {
     Alert.alert(
-      'Видалити оголошення?',
-      'Оголошення зникне зі стрічки й профілю. Чати залишаться в архіві, а оголошення, фото та переписки остаточно видаляться через 3 місяці.',
+      t('myListings.deleteTitle'),
+      t('myListings.deleteText'),
       [
-        { text: 'Скасувати', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Видалити',
+          text: t('myListings.delete'),
           style: 'destructive',
           onPress: () => void deleteListing(id),
         },
@@ -86,7 +87,7 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Мої оголошення" onBack={navigation.goBack} />
+      <ScreenHeader title={t('myListings.title')} onBack={navigation.goBack} />
       <ScrollView
         contentContainerStyle={styles.page}
         showsVerticalScrollIndicator={false}
@@ -101,17 +102,17 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
                 navigation.navigate('EditListing', { bookId: ad.id })
               }
               onToggleStatus={() =>
-                confirmStatusChange(ad.id, ad.status === 'Продано')
+                confirmStatusChange(ad.id, ad.status === 'sold')
               }
               onDelete={() => confirmDelete(ad.id)}
             />
           ))
         ) : (
-          <Empty text="У тебе ще немає оголошень." />
+          <Empty text={t('myListings.empty')} />
         )}
         <Button
           secondary
-          label="Додати ще книгу"
+          label={t('myListings.addBook')}
           onPress={() => navigation.navigate('Tabs', { screen: 'Add' })}
         />
       </ScrollView>

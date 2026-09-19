@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -27,7 +28,7 @@ export function CompleteProfileScreen() {
   const [name, setName] = useState(profile?.display_name || googleName);
   const [phone, setPhone] = useState(profile?.phone || '+380');
   const [location, setLocation] = useState<UserLocation | null>(null);
-  const [locationState, setLocationState] = useState('Визначаємо місто…');
+  const [locationState, setLocationState] = useState(t('completeProfile.detectingCity'));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -35,9 +36,9 @@ export function CompleteProfileScreen() {
     getUserLocation()
       .then(value => {
         setLocation(value);
-        setLocationState(value ? value.city : 'Доступ до геолокації не надано');
+        setLocationState(value ? value.city : t('completeProfile.locationDenied'));
       })
-      .catch(() => setLocationState('Не вдалося отримати геолокацію'));
+      .catch(() => setLocationState(t('completeProfile.locationError')));
   }, []);
 
   const save = async () => {
@@ -46,15 +47,15 @@ export function CompleteProfileScreen() {
     }
     const digits = phone.replace(/\D/g, '');
     if (name.trim().length < 2) {
-      setError('Вкажи ім’я.');
+      setError(t('completeProfile.nameError'));
       return;
     }
     if (digits.length !== 12 || !digits.startsWith('380')) {
-      setError('Вкажи український номер у форматі +380XXXXXXXXX.');
+      setError(t('completeProfile.phoneError'));
       return;
     }
     if (!location) {
-      setError('Дозволь геолокацію, щоб визначити твоє місто.');
+      setError(t('completeProfile.locationRequired'));
       return;
     }
 
@@ -90,19 +91,17 @@ export function CompleteProfileScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.page}
       >
-        <Text style={styles.title}>Ще один крок</Text>
-        <Text style={common.subtitle}>
-          Телефон побачать лише там, де ти сам вирішиш поділитися контактом.
-        </Text>
+        <Text style={styles.title}>{t('completeProfile.title')}</Text>
+        <Text style={common.subtitle}>{t('completeProfile.subtitle')}</Text>
         <Field
-          label="Як тебе звати"
+          label={t('completeProfile.nameLabel')}
           value={name}
           onChangeText={setName}
-          placeholder="Оксана"
+          placeholder={t('completeProfile.namePlaceholder')}
           autoCapitalize="words"
         />
         <Field
-          label="Телефон"
+          label={t('completeProfile.phone')}
           value={phone}
           onChangeText={setPhone}
           placeholder="+380XXXXXXXXX"
@@ -116,24 +115,24 @@ export function CompleteProfileScreen() {
             color={theme.palette.accent700}
           />
           <View style={styles.locationText}>
-            <Text style={styles.locationLabel}>Твоє місто</Text>
+            <Text style={styles.locationLabel}>{t('completeProfile.yourCity')}</Text>
             <Text style={common.meta}>{locationState}</Text>
           </View>
         </View>
         {profileError ? (
           <Text style={styles.error}>
-            Таблиця профілів ще не налаштована: {profileError}
+            {t('completeProfile.profileTableError', { error: profileError })}
           </Text>
         ) : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          label={isSaving ? 'Зберігаємо…' : 'Готово, поїхали'}
+          label={isSaving ? t('common.saving') : t('completeProfile.finish')}
           disabled={isSaving}
           onPress={save}
         />
         <Button
           secondary
-          label="Вийти"
+          label={t('completeProfile.signOut')}
           disabled={isSaving}
           onPress={signOutFromGoogle}
         />

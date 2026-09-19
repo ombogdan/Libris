@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -40,7 +41,7 @@ export function ReviewModal({
 
   const submit = () => {
     if (!rating) {
-      setValidationError('Обери оцінку від 1 до 5.');
+      setValidationError(t('reviews.ratingError'));
       return;
     }
 
@@ -60,14 +61,14 @@ export function ReviewModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Залишити відгук</Text>
+          <Text style={styles.title}>{t('reviews.leave')}</Text>
           <Text style={styles.subtitle}>
-            Як пройшло спілкування з {recipientName || 'користувачем'}?
+            {t('reviews.experience', { name: recipientName || t('common.userInContext') })}
           </Text>
 
           <View
             accessibilityRole="radiogroup"
-            accessibilityLabel="Оцінка"
+            accessibilityLabel={t('reviews.ratingLabel')}
             style={styles.stars}
           >
             {RATINGS.map(value => {
@@ -77,7 +78,7 @@ export function ReviewModal({
                 <Pressable
                   key={value}
                   accessibilityRole="radio"
-                  accessibilityLabel={`${value} з 5`}
+                  accessibilityLabel={t('reviews.ratingValue', { value })}
                   accessibilityState={{ selected: rating === value }}
                   disabled={isSubmitting}
                   onPress={() => {
@@ -97,14 +98,14 @@ export function ReviewModal({
             })}
           </View>
 
-          <Text style={styles.label}>Коментар (необов’язково)</Text>
+          <Text style={styles.label}>{t('reviews.optionalComment')}</Text>
           <TextInput
             value={comment}
             onChangeText={setComment}
             editable={!isSubmitting}
             multiline
             maxLength={500}
-            placeholder="Напиши кілька слів про спілкування"
+            placeholder={t('reviews.commentPlaceholder')}
             placeholderTextColor={styles.colors.placeholder}
             style={styles.input}
             textAlignVertical="top"
@@ -116,13 +117,13 @@ export function ReviewModal({
           ) : null}
 
           <Button
-            label={isSubmitting ? 'Публікуємо…' : 'Опублікувати відгук'}
+            label={isSubmitting ? t('reviews.publishing') : t('reviews.leave')}
             disabled={isSubmitting}
             onPress={submit}
           />
           <Button
             secondary
-            label="Скасувати"
+            label={t('common.cancel')}
             disabled={isSubmitting}
             onPress={onClose}
           />

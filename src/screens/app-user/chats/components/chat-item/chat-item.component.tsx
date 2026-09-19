@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useCommonStyles } from 'shared/components/ui';
@@ -9,19 +10,19 @@ export function ChatItem({ chat, onPress }: ChatItemProps) {
   const common = useCommonStyles();
   const initial = chat.name.trim().charAt(0).toUpperCase() || '?';
   const lastMessage =
-    chat.lastMessage || chat.msgs.at(-1)?.text || 'Почніть розмову';
+    chat.lastMessage || chat.msgs.at(-1)?.text || t('chats.startConversation');
   const unreadCount = Math.max(chat.unreadCount, chat.unread ? 1 : 0);
   const archiveLabel =
     chat.archiveReason === 'sold'
-      ? 'Продано'
+      ? t('chats.sold')
       : chat.archiveReason === 'deleted'
-      ? 'Видалено'
-      : 'Архів';
+      ? t('chats.deleted')
+      : t('chats.archive');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Чат з ${chat.name}`}
+      accessibilityLabel={t('chats.chatWith', { name: chat.name })}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       onPress={onPress}
     >

@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, {
   createContext,
   useCallback,
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setProfileError(
           error && typeof error === 'object' && 'message' in error
             ? String(error.message)
-            : 'Не вдалося завантажити профіль.',
+            : t('profile.loadError'),
         );
       }
     } finally {
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       >,
     ) => {
       if (!sessionUserId) {
-        throw new Error('Увійди в акаунт, щоб редагувати профіль.');
+        throw new Error(t('profile.authRequired'));
       }
 
       const { data, error } = await supabase

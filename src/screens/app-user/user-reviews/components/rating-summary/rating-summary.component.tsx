@@ -1,25 +1,9 @@
+import { formatRating, formatReviewsCount } from 'shared/localization/i18n';
 import React from 'react';
 import { Text, View } from 'react-native';
 
 import { useStyles } from './rating-summary.styles';
 import type { RatingSummaryProps } from './rating-summary.types';
-
-const reviewCountLabel = (count: number) => {
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-
-  if (lastDigit === 1 && lastTwoDigits !== 11) {
-    return `${count} відгук`;
-  }
-  if (
-    lastDigit >= 2 &&
-    lastDigit <= 4 &&
-    (lastTwoDigits < 12 || lastTwoDigits > 14)
-  ) {
-    return `${count} відгуки`;
-  }
-  return `${count} відгуків`;
-};
 
 export function RatingSummary({
   displayName,
@@ -35,7 +19,7 @@ export function RatingSummary({
         <Text style={styles.score}>
           {normalizedAverage === null
             ? '—'
-            : normalizedAverage.toFixed(1).replace('.', ',')}
+            : formatRating(normalizedAverage)}
         </Text>
         <Text style={styles.star}>★</Text>
       </View>
@@ -43,7 +27,7 @@ export function RatingSummary({
         <Text numberOfLines={2} style={styles.name}>
           {displayName}
         </Text>
-        <Text style={styles.count}>{reviewCountLabel(count)}</Text>
+        <Text style={styles.count}>{formatReviewsCount(count)}</Text>
       </View>
     </View>
   );

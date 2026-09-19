@@ -1,3 +1,4 @@
+import { formatBooksCount, t } from 'shared/localization/i18n';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -51,8 +52,8 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader
-        title="Що поруч"
-        right={<Chip label={profile?.city || 'Місто'} />}
+        title={t('feed.title')}
+        right={<Chip label={profile?.city || t('common.city')} />}
       />
 
       <ScrollView
@@ -68,7 +69,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
           style={styles.search}
           value={query}
           onChangeText={setQuery}
-          placeholder="Автор, назва, предмет…"
+          placeholder={t('feed.search')}
           placeholderTextColor={styles.colors.placeholder}
         />
         <ScrollView
@@ -76,24 +77,29 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chips}
         >
-          {['Усі', 'Підручники', 'Художня', 'Даром'].map(value => (
+          {[
+            { value: 'Усі', label: t('feed.all') },
+            { value: 'Підручники', label: t('feed.textbooks') },
+            { value: 'Художня', label: t('feed.fiction') },
+            { value: 'Даром', label: t('feed.free') },
+          ].map(({ value, label }) => (
             <Chip
               key={value}
-              label={value}
+              label={label}
               active={category === value}
               onPress={() => setCategory(value)}
             />
           ))}
         </ScrollView>
         <Text style={common.mini}>
-          {list.length} книг · сортування: найновіші
+          {t('feed.resultSummary', { books: formatBooksCount(list.length) })}
         </Text>
         {store.booksLoading && !store.books.length ? (
           <View style={styles.loading}>
             <ActivityIndicator size="large" color={theme.palette.accent} />
           </View>
         ) : store.booksError ? (
-          <Empty text={`Не вдалося завантажити книги: ${store.booksError}`} />
+          <Empty text={t('feed.loadError', { error: store.booksError })} />
         ) : list.length ? (
           list.map(book => (
             <BookRow
@@ -107,7 +113,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
             />
           ))
         ) : (
-          <Empty text="Нічого не знайшлось. Спробуй іншу назву або скинь фільтр." />
+          <Empty text={t('feed.empty')} />
         )}
       </ScrollView>
     </View>

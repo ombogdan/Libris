@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -55,7 +56,7 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
           ) : null}
 
           {sending ? (
-            <Text style={[styles.status, styles.mineMeta]}>Надсилання…</Text>
+            <Text style={[styles.status, styles.mineMeta]}>{t('thread.sending')}</Text>
           ) : null}
 
           {message.me && message.status === 'sent' ? (
@@ -65,11 +66,11 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
           {failed ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Повторити надсилання повідомлення"
+              accessibilityLabel={t('thread.retrySendLabel')}
               hitSlop={styles.hitSlop}
               onPress={onRetry}
             >
-              <Text style={styles.retry}>Не надіслано · Повторити</Text>
+              <Text style={styles.retry}>{t('thread.notSent')}</Text>
             </Pressable>
           ) : null}
         </View>

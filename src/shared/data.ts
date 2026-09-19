@@ -155,7 +155,7 @@ export type Ad = {
   id: string;
   title: string;
   price: number;
-  status: string;
+  status: 'active' | 'sold';
   stats: string;
   tone: 'accent' | 'accent2' | 'neutral';
   imageUrls?: string[];

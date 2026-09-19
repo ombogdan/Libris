@@ -1,3 +1,4 @@
+import { t, translateCondition } from 'shared/localization/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -83,7 +84,7 @@ export function EditListingScreen({
     try {
       const location = await getUserLocation();
       if (!location) {
-        setError('Дозволь доступ до геолокації або введи місто вручну.');
+        setError(t('listingForm.locationPermission'));
         return;
       }
       setForm(current => ({
@@ -93,7 +94,7 @@ export function EditListingScreen({
         longitude: null,
       }));
     } catch {
-      setError('Не вдалося визначити місто. Введи його вручну.');
+      setError(t('listingForm.locationError'));
     } finally {
       setIsLocating(false);
     }
@@ -106,18 +107,18 @@ export function EditListingScreen({
 
     const price = Number(form.price.replace(',', '.'));
     if (!form.title.trim() || !form.author.trim() || !form.city.trim()) {
-      setError('Заповни назву, автора та місто.');
+      setError(t('listingForm.requiredFields'));
       return;
     }
     if (!form.images.length) {
-      setError('Залиши хоча б одне фото книги.');
+      setError(t('listingForm.keepPhoto'));
       return;
     }
     if (
       !form.free &&
       (!form.price.trim() || !Number.isFinite(price) || price < 0)
     ) {
-      setError('Вкажи коректну ціну або обери «Віддам даром».');
+      setError(t('listingForm.priceError'));
       return;
     }
 
@@ -129,7 +130,7 @@ export function EditListingScreen({
       if (latitude === null || longitude === null) {
         const cityCenter = await getCityCenter(form.city);
         if (!cityCenter) {
-          setError('Не вдалося знайти це місто. Перевір назву.');
+          setError(t('listingForm.cityNotFound'));
           return;
         }
         latitude = cityCenter.latitude;
@@ -153,15 +154,15 @@ export function EditListingScreen({
       });
       store.notify(
         result.imageCleanupFailed
-          ? 'Дані збережено, але старі фото не вдалося видалити'
-          : 'Оголошення оновлено',
+          ? t('listingForm.cleanupWarning')
+          : t('listingForm.updated'),
       );
       navigation.goBack();
     } catch (saveError) {
       setError(
         saveError && typeof saveError === 'object' && 'message' in saveError
           ? String(saveError.message)
-          : 'Не вдалося оновити оголошення.',
+          : t('listingForm.updateError'),
       );
     } finally {
       setIsSaving(false);
@@ -171,10 +172,10 @@ export function EditListingScreen({
   if (!book) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader title="Редагування" onBack={navigation.goBack} />
+        <ScreenHeader title={t('listingForm.editTitle')} onBack={navigation.goBack} />
         <View style={styles.missing}>
-          <Empty text="Це оголошення більше недоступне." />
-          <Button label="Назад" onPress={navigation.goBack} />
+          <Empty text={t('listingForm.missing')} />
+          <Button label={t('common.back')} onPress={navigation.goBack} />
         </View>
       </View>
     );
@@ -182,7 +183,7 @@ export function EditListingScreen({
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Редагування" onBack={navigation.goBack} />
+      <ScreenHeader title={t('listingForm.editTitle')} onBack={navigation.goBack} />
       <KeyboardAwareScrollView
         style={styles.scroll}
         contentContainerStyle={[common.page, styles.page]}
@@ -193,9 +194,7 @@ export function EditListingScreen({
         keyboardOpeningTime={0}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={common.subtitle}>
-          Зміни дані оголошення або онови фотографії книги.
-        </Text>
+        <Text style={common.subtitle}>{t('listingForm.editSubtitle')}</Text>
         <BookImagesPicker
           images={form.images}
           onChange={images => set('images', images)}
@@ -203,17 +202,17 @@ export function EditListingScreen({
         />
         <Field
           compact
-          label="Назва"
+          label={t('listingForm.title')}
           value={form.title}
           onChangeText={value => set('title', value)}
         />
         <Field
           compact
-          label="Автор"
+          label={t('listingForm.author')}
           value={form.author}
           onChangeText={value => set('author', value)}
         />
-        <Text style={styles.label}>Ціна</Text>
+        <Text style={styles.label}>{t('listingForm.price')}</Text>
         <View style={common.inline}>
           <TextInput
             editable={!form.free}
@@ -229,26 +228,26 @@ export function EditListingScreen({
             placeholderTextColor={styles.colors.placeholder}
           />
           <Chip
-            label="Віддам даром"
+            label={t('listingForm.giveAway')}
             active={form.free}
             onPress={() => set('free', !form.free)}
           />
         </View>
-        <Text style={styles.label}>Стан</Text>
+        <Text style={styles.label}>{t('listingForm.condition')}</Text>
         <View style={styles.chips}>
           {['Як нова', 'Добрий', 'Читана'].map(condition => (
             <Chip
               key={condition}
-              label={condition}
+              label={translateCondition(condition)}
               active={form.condition === condition}
               onPress={() => set('condition', condition)}
             />
           ))}
         </View>
         <View style={styles.cityHeading}>
-          <Text style={styles.label}>Місто</Text>
+          <Text style={styles.label}>{t('listingForm.city')}</Text>
           <Chip
-            label={isLocating ? 'Визначаємо…' : 'Визначити зараз'}
+            label={isLocating ? t('listingForm.detecting') : t('listingForm.detectNow')}
             onPress={isLocating ? undefined : detectCity}
           />
         </View>
@@ -263,21 +262,21 @@ export function EditListingScreen({
               longitude: null,
             }))
           }
-          placeholder="Наприклад, Полтава"
+          placeholder={t('listingForm.cityPlaceholder')}
           placeholderTextColor={styles.colors.placeholder}
         />
-        <Text style={styles.label}>Коротко про книгу</Text>
+        <Text style={styles.label}>{t('listingForm.about')}</Text>
         <TextInput
           multiline
           style={[styles.input, styles.textarea]}
           value={form.about}
           onChangeText={value => set('about', value)}
-          placeholder="Читала один раз, обкладинка як нова."
+          placeholder={t('listingForm.aboutPlaceholder')}
           placeholderTextColor={styles.colors.placeholder}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          label={isSaving ? 'Зберігаємо…' : 'Зберегти зміни'}
+          label={isSaving ? t('common.saving') : t('listingForm.saveChanges')}
           disabled={isSaving}
           onPress={save}
         />

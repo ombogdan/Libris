@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -13,7 +14,7 @@ export function ListingItem({
   onDelete,
 }: ListingItemProps) {
   const styles = useStyles();
-  const isSold = ad.status === 'Продано';
+  const isSold = ad.status === 'sold';
 
   return (
     <View style={[styles.card, disabled && styles.disabled]}>
@@ -53,7 +54,7 @@ export function ListingItem({
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.actionText}>Редагувати</Text>
+          <Text style={styles.actionText}>{t('myListings.edit')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -65,7 +66,7 @@ export function ListingItem({
           ]}
         >
           <Text style={styles.actionText}>
-            {isSold ? 'Активувати' : 'Продано'}
+            {isSold ? t('myListings.activate') : t('myListings.soldAction')}
           </Text>
         </Pressable>
         <Pressable
@@ -78,7 +79,7 @@ export function ListingItem({
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.deleteText}>Видалити</Text>
+          <Text style={styles.deleteText}>{t('myListings.delete')}</Text>
         </Pressable>
       </View>
     </View>

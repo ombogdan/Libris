@@ -1,3 +1,4 @@
+import { appLocale, t } from 'shared/localization/i18n';
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
 
@@ -36,16 +37,18 @@ function getCoordinates() {
   );
 }
 
+const geocodingLanguage = appLocale;
+
 async function reverseGeocode(latitude: number, longitude: number) {
   const url =
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
-    `&lat=${latitude}&lon=${longitude}&accept-language=uk`;
+    `&lat=${latitude}&lon=${longitude}&accept-language=${geocodingLanguage}`;
   const response = await fetch(url, {
     headers: { 'User-Agent': 'Libris/1.0 (mobile app)' },
   });
 
   if (!response.ok) {
-    throw new Error('Не вдалося визначити місто');
+    throw new Error(t('location.determineError'));
   }
 
   const data = await response.json();
@@ -54,7 +57,7 @@ async function reverseGeocode(latitude: number, longitude: number) {
     data.address?.village ??
     data.address?.municipality ??
     data.address?.county ??
-    'Місто не визначено') as string;
+    t('location.unknown')) as string;
 }
 
 export async function getCityCenter(
@@ -62,14 +65,14 @@ export async function getCityCenter(
 ): Promise<UserLocation | null> {
   const url =
     `https://nominatim.openstreetmap.org/search?format=jsonv2` +
-    `&q=${encodeURIComponent(`${city}, Україна`)}` +
-    `&countrycodes=ua&limit=1&accept-language=uk`;
+    `&q=${encodeURIComponent(`${city}, Ukraine`)}` +
+    `&countrycodes=ua&limit=1&accept-language=${geocodingLanguage}`;
   const response = await fetch(url, {
     headers: { 'User-Agent': 'Libris/1.0 (mobile app)' },
   });
 
   if (!response.ok) {
-    throw new Error('Не вдалося знайти місто');
+    throw new Error(t('location.findError'));
   }
 
   const [result] = await response.json();
@@ -90,7 +93,7 @@ export async function getUserLocation(): Promise<UserLocation | null> {
   }
 
   const { latitude, longitude } = await getCoordinates();
-  let city = 'Місто не визначено';
+  let city = t('location.unknown');
 
   try {
     city = await reverseGeocode(latitude, longitude);

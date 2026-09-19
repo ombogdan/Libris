@@ -1,3 +1,4 @@
+import { localeTag, t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Text, View } from 'react-native';
 
@@ -10,7 +11,7 @@ const formatDate = (value: string) => {
     return '';
   }
 
-  return date.toLocaleDateString('uk-UA', {
+  return date.toLocaleDateString(localeTag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -52,7 +53,7 @@ export function ReviewItem({ review }: ReviewItemProps) {
 
       {comment ? <Text style={styles.comment}>{comment}</Text> : null}
       <Text numberOfLines={1} style={styles.listing}>
-        Щодо «{review.listingTitle}»
+        {t('reviews.regarding', { title: review.listingTitle })}
       </Text>
     </View>
   );

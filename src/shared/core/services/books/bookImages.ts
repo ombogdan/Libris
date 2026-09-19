@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import { readFile } from '@dr.pogodin/react-native-fs';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '../supabase';
@@ -93,7 +94,7 @@ export async function uploadBookImages(
       const format = detectImageFormat(imageBuffer);
       if (!format) {
         throw new Error(
-          'Формат фото не підтримується. Обери JPG, PNG або WebP.',
+          t('images.unsupported'),
         );
       }
 

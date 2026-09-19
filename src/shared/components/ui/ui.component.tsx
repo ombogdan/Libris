@@ -1,3 +1,4 @@
+import { t, translateCondition } from 'shared/localization/i18n';
 import React from 'react';
 import {
   Image,
@@ -10,7 +11,8 @@ import {
 import { Book } from 'shared/data';
 import { useStyles } from './ui.styles';
 
-export const price = (value: number) => (value ? `${value} ₴` : 'Даром');
+export const price = (value: number) =>
+  value ? `${value} ₴` : t('common.free');
 
 export function Button({
   label,
@@ -167,7 +169,7 @@ export function BookRow({
         <View style={styles.inline}>
           <PricePill value={book.price} />
           <Text style={styles.mini}>
-            {book.condition} · {book.city}
+            {translateCondition(book.condition)} · {book.city}
           </Text>
         </View>
       </View>

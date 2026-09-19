@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,11 +27,8 @@ export function MarkSoldModal({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>Кому продано «{listingTitle}»?</Text>
-          <Text style={styles.subtitle}>
-            Обраний покупець і ти зможете залишити відгуки один одному. Усі
-            переписки про цю книгу перейдуть в архів.
-          </Text>
+          <Text style={styles.title}>{t('myListings.soldTo', { title: listingTitle })}</Text>
+          <Text style={styles.subtitle}>{t('myListings.soldHelp')}</Text>
           <ScrollView
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
@@ -60,7 +58,7 @@ export function MarkSoldModal({
                   </View>
                   <View style={styles.optionContent}>
                     <Text style={styles.optionText}>{option.name}</Text>
-                    <Text style={styles.optionHint}>Покупець із переписки</Text>
+                    <Text style={styles.optionHint}>{t('myListings.buyerFromChat')}</Text>
                   </View>
                 </Pressable>
               );
@@ -75,12 +73,12 @@ export function MarkSoldModal({
                 pressed && styles.optionPressed,
               ]}
             >
-              <Text style={styles.outsideText}>Продано поза Libris</Text>
+              <Text style={styles.outsideText}>{t('myListings.soldOutside')}</Text>
             </Pressable>
           </ScrollView>
           <Button
             secondary
-            label="Скасувати"
+            label={t('common.cancel')}
             disabled={isSaving}
             onPress={onClose}
           />

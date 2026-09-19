@@ -1,3 +1,4 @@
+import { formatReviewsCount, t, translateCondition } from 'shared/localization/i18n';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,23 +15,6 @@ import { useAppStore } from 'store/AppStore';
 import { BookGallery } from './components/book-gallery';
 import { useStyles } from './book.styles';
 import type { BookScreenProps } from './book.types';
-
-const reviewCountLabel = (count: number) => {
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-
-  if (lastDigit === 1 && lastTwoDigits !== 11) {
-    return `${count} відгук`;
-  }
-  if (
-    lastDigit >= 2 &&
-    lastDigit <= 4 &&
-    (lastTwoDigits < 12 || lastTwoDigits > 14)
-  ) {
-    return `${count} відгуки`;
-  }
-  return `${count} відгуків`;
-};
 
 export function BookScreen({ navigation, route }: BookScreenProps) {
   const insets = useSafeAreaInsets();
@@ -55,7 +39,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
       store.notify(
         error && typeof error === 'object' && 'message' in error
           ? String(error.message)
-          : 'Не вдалося відкрити чат.',
+          : t('book.openChatError'),
       );
     } finally {
       setIsOpeningChat(false);
@@ -65,21 +49,21 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   if (!book) {
     return (
       <View style={styles.missing}>
-        <Empty text="Це оголошення більше недоступне." />
-        <Button label="Назад" onPress={navigation.goBack} />
+        <Empty text={t('listingForm.missing')} />
+        <Button label={t('common.back')} onPress={navigation.goBack} />
       </View>
     );
   }
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Оголошення" onBack={navigation.goBack} />
+      <ScreenHeader title={t('book.title')} onBack={navigation.goBack} />
 
       <ScrollView contentContainerStyle={[common.page, styles.page]}>
         <BookGallery book={book} />
         <View style={common.inline}>
           <PricePill value={book.price} />
-          <Chip label={book.condition} />
+          <Chip label={translateCondition(book.condition)} />
         </View>
         <Text style={styles.title}>{book.title}</Text>
         <Text style={styles.author}>{book.author}</Text>
@@ -108,8 +92,8 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
             <Text style={common.meta}>
               ★ {book.rating} ·{' '}
               {book.reviewsCount
-                ? reviewCountLabel(book.reviewsCount)
-                : 'без відгуків'}
+                ? formatReviewsCount(book.reviewsCount)
+                : t('book.noReviews')}
             </Text>
             <Text style={common.meta}>
               {book.city} · {book.sellerAds}
@@ -120,10 +104,10 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
         <Button
           label={
             isOwnListing
-              ? 'Це ваше оголошення'
+              ? t('book.ownListing')
               : isOpeningChat
-              ? 'Відкриваємо чат…'
-              : 'Написати продавцю'
+              ? t('book.openingChat')
+              : t('book.messageSeller')
           }
           disabled={isOpeningChat || isOwnListing}
           onPress={openChat}
@@ -132,8 +116,8 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
           secondary
           label={
             store.favs.includes(book.id)
-              ? '♥  В обраному'
-              : '♡  Додати в обране'
+              ? t('favorites.saved')
+              : t('favorites.add')
           }
           onPress={() => store.toggleFav(book.id)}
         />

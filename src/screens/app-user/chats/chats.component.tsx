@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React, {
   useCallback,
   useEffect,
@@ -24,16 +25,15 @@ import { useStyles } from './chats.styles';
 import type { ChatSection, ChatsScreenProps } from './chats.types';
 
 const CHAT_SECTIONS: { key: ChatSection; label: string }[] = [
-  { key: 'buying', label: 'Купую' },
-  { key: 'selling', label: 'Продаю' },
-  { key: 'archive', label: 'Архів' },
+  { key: 'buying', label: t('chats.buying') },
+  { key: 'selling', label: t('chats.selling') },
+  { key: 'archive', label: t('chats.archive') },
 ];
 
 const EMPTY_SECTION_TEXT: Record<ChatSection, string> = {
-  buying: 'Тут з’являться розмови про книги, які ти хочеш придбати.',
-  selling:
-    'Тут з’являться повідомлення від людей, які цікавляться твоїми книгами.',
-  archive: 'Сюди потраплять розмови про продані або видалені оголошення.',
+  buying: t('chats.buyingEmpty'),
+  selling: t('chats.sellingEmpty'),
+  archive: t('chats.archiveEmpty'),
 };
 
 export function ChatsScreen({ navigation }: ChatsScreenProps) {
@@ -105,7 +105,7 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
       return (
         <View style={styles.centeredState}>
           <ActivityIndicator size="large" color={theme.palette.accent} />
-          <Text style={styles.stateText}>Завантажуємо чати…</Text>
+          <Text style={styles.stateText}>{t('chats.loading')}</Text>
         </View>
       );
     }
@@ -113,10 +113,10 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
     if (store.chatsError) {
       return (
         <View style={styles.emptyState}>
-          <Empty text="Не вдалося завантажити чати. Перевір з’єднання та спробуй ще раз." />
+          <Empty text={t('chats.loadError')} />
           <Button
             secondary
-            label="Спробувати ще раз"
+            label={t('common.retry')}
             onPress={() => void store.reloadChats()}
           />
         </View>
@@ -128,11 +128,11 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Чати" />
+      <ScreenHeader title={t('chats.title')} />
 
       <View
         accessibilityRole="tablist"
-        accessibilityLabel="Розділи чатів"
+        accessibilityLabel={t('chats.sectionsLabel')}
         style={styles.tabs}
       >
         {CHAT_SECTIONS.map(section => {
@@ -175,11 +175,11 @@ export function ChatsScreen({ navigation }: ChatsScreenProps) {
           store.chatsError && hasChats ? (
             <View style={styles.inlineError}>
               <Text style={styles.inlineErrorText}>
-                Не вдалося оновити чати
+                {t('chats.updateError')}
               </Text>
               <Button
                 secondary
-                label="Повторити"
+                label={t('common.repeat')}
                 onPress={() => void store.reloadChats()}
               />
             </View>

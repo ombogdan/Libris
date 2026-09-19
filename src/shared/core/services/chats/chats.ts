@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import { supabase } from 'services/supabase';
 import type {
   ChatConversationSummary,
@@ -93,11 +94,11 @@ export async function sendChatMessage(
   const normalizedBody = body.trim();
 
   if (!normalizedBody) {
-    throw new Error('Повідомлення не може бути порожнім.');
+    throw new Error(t('thread.messageEmpty'));
   }
 
   if (normalizedBody.length > 2000) {
-    throw new Error('Повідомлення не може бути довшим за 2000 символів.');
+    throw new Error(t('thread.messageTooLong'));
   }
 
   const { data, error } = await supabase

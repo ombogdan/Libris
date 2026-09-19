@@ -1,3 +1,4 @@
+import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -12,28 +13,25 @@ export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
     <View style={styles.page}>
       <View>
         <View style={styles.logo}>
-          <Text style={styles.logoText}>К</Text>
+          <Text style={styles.logoText}>{t('common.logoLetter')}</Text>
         </View>
-        <Text style={styles.hero}>Книжки,{`\n`}що йдуть далі</Text>
-        <Text style={styles.subtitle}>
-          Продавай прочитане, віддавай безкоштовно, знаходь підручники в своєму
-          місті.
-        </Text>
+        <Text style={styles.hero}>{t('welcome.title')}</Text>
+        <Text style={styles.subtitle}>{t('welcome.subtitle')}</Text>
       </View>
       <View>
         <View style={styles.tags}>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>1 240 книг поруч</Text>
+            <Text style={styles.tagText}>{t('welcome.nearbyBooks')}</Text>
           </View>
-          <Chip label="Полтава · Київ · Львів" />
+          <Chip label={t('welcome.cities')} />
         </View>
         <Button
-          label="Створити акаунт"
+          label={t('welcome.createAccount')}
           onPress={() => navigation.navigate('Signup')}
         />
         <Button
           secondary
-          label="Спершу подивлюсь"
+          label={t('welcome.browseFirst')}
           onPress={() => navigation.replace('Tabs', { screen: 'Feed' })}
         />
       </View>
