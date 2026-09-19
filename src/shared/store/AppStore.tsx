@@ -181,6 +181,7 @@ const FEED_TONES: Book['tone'][] = ['accent', 'accent2', 'neutral'];
 
 const DEFAULT_FEED_FILTERS: FeedFilters = {
   query: '',
+  city: null,
   category: null,
   freeOnly: false,
   minPrice: null,

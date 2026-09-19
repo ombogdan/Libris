@@ -21,6 +21,11 @@ export const useStyles = createStyles(
         gap: scale(13),
         marginBottom: scale(13),
       },
+      quickFilters: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        gap: scale(8),
+      },
       search: {
         height: scale(48),
         borderRadius: scale(999),
@@ -30,10 +35,6 @@ export const useStyles = createStyles(
         color: theme.palette.text,
         borderWidth: scale(1),
         borderColor: theme.palette.divider,
-      },
-      chips: {
-        gap: scale(8),
-        paddingRight: scale(18),
       },
       separator: { height: scale(13) },
       loading: {

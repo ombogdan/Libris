@@ -4,12 +4,11 @@ import {
   t,
   translateCategory,
 } from 'shared/localization/i18n';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  ScrollView,
   Text,
   TextInput,
   View,
@@ -17,7 +16,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookRow,
-  Chip,
   Empty,
   ScreenHeader,
   useCommonStyles,
@@ -27,7 +25,9 @@ import { useAppStore } from 'store/AppStore';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { useTheme } from 'shared/theme';
 import type { FeedSort } from 'services/books';
+import { FeedFilterButton } from './components/feed-filter-button';
 import { FeedFiltersModal } from './components/feed-filters-modal';
+import { FeedSelectModal } from './components/feed-select-modal';
 import { useStyles } from './feed.styles';
 import type { FeedScreenProps } from './feed.types';
 
@@ -46,8 +46,48 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
   const store = useAppStore();
   const { profile } = useAuth();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectOpen, setSelectOpen] = useState<
+    'location' | 'category' | null
+  >(null);
+  const initialCityApplied = useRef(false);
   const hasLocation = Boolean(profile?.latitude && profile?.longitude);
   const filters = store.feedFilters;
+  const setFeedFilters = store.setFeedFilters;
+
+  useEffect(() => {
+    if (initialCityApplied.current || !profile?.city) {
+      return;
+    }
+    initialCityApplied.current = true;
+    setFeedFilters({ city: profile.city });
+  }, [profile?.city, setFeedFilters]);
+
+  const locationOptions = useMemo(() => {
+    const options: { value: string | null; label: string }[] = [
+      { value: null, label: t('filters.allUkraine') },
+    ];
+    if (profile?.city) {
+      options.push({ value: profile.city, label: profile.city });
+    }
+    if (
+      filters.city &&
+      !options.some(option => option.value === filters.city)
+    ) {
+      options.push({ value: filters.city, label: filters.city });
+    }
+    return options;
+  }, [filters.city, profile?.city]);
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: null, label: t('filters.allCategories') },
+      ...BOOK_CATEGORIES.map(category => ({
+        value: category,
+        label: translateCategory(category),
+      })),
+    ],
+    [],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Book }) => (
@@ -64,6 +104,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
   );
 
   const activeFilterCount = [
+    filters.freeOnly ? true : null,
     filters.condition,
     filters.minPrice,
     filters.maxPrice,
@@ -73,10 +114,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title={t('feed.title')}
-        right={<Chip label={profile?.city || t('common.city')} />}
-      />
+      <ScreenHeader title={t('feed.title')} />
 
       <FlatList
         data={store.feedBooks}
@@ -105,41 +143,31 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
               placeholder={t('feed.search')}
               placeholderTextColor={styles.colors.placeholder}
             />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chips}
-            >
-              <Chip
-                label={t('feed.all')}
-                active={!filters.category}
-                onPress={() => store.setFeedFilters({ category: null })}
+            <View style={styles.quickFilters}>
+              <FeedFilterButton
+                label={t('filters.location')}
+                value={filters.city || t('filters.allUkraine')}
+                icon="location-outline"
+                onPress={() => setSelectOpen('location')}
               />
-              {BOOK_CATEGORIES.map(category => (
-                <Chip
-                  key={category}
-                  label={translateCategory(category)}
-                  active={filters.category === category}
-                  onPress={() => store.setFeedFilters({ category })}
-                />
-              ))}
-              <Chip
-                label={t('feed.free')}
-                active={filters.freeOnly}
-                onPress={() =>
-                  store.setFeedFilters({ freeOnly: !filters.freeOnly })
+              <FeedFilterButton
+                label={t('filters.category')}
+                value={
+                  filters.category
+                    ? translateCategory(filters.category)
+                    : t('filters.allCategories')
                 }
+                icon="book-outline"
+                onPress={() => setSelectOpen('category')}
               />
-              <Chip
-                label={
-                  activeFilterCount
-                    ? `${t('filters.button')} · ${activeFilterCount}`
-                    : t('filters.button')
-                }
-                active={filtersOpen}
+              <FeedFilterButton
+                compact
+                label={t('filters.button')}
+                icon="options-outline"
+                badge={activeFilterCount}
                 onPress={() => setFiltersOpen(true)}
               />
-            </ScrollView>
+            </View>
             <Text style={common.mini}>
               {t('feed.resultSummary', {
                 books: formatBooksCount(store.feedBooks.length),
@@ -181,6 +209,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
         }}
         onReset={() => {
           store.setFeedFilters({
+            freeOnly: false,
             condition: null,
             minPrice: null,
             maxPrice: null,
@@ -189,6 +218,30 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
           });
           setFiltersOpen(false);
         }}
+      />
+
+      <FeedSelectModal
+        visible={selectOpen === 'location'}
+        title={t('filters.chooseLocation')}
+        value={filters.city}
+        options={locationOptions}
+        customLabel={t('filters.otherLocation')}
+        customPlaceholder={t('filters.cityVillagePlaceholder')}
+        customValue={filters.city ?? ''}
+        onClose={() => setSelectOpen(null)}
+        onSelect={city => {
+          initialCityApplied.current = true;
+          store.setFeedFilters({ city });
+        }}
+      />
+
+      <FeedSelectModal
+        visible={selectOpen === 'category'}
+        title={t('filters.chooseCategory')}
+        value={filters.category}
+        options={categoryOptions}
+        onClose={() => setSelectOpen(null)}
+        onSelect={category => store.setFeedFilters({ category })}
       />
     </View>
   );

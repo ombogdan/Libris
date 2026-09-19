@@ -347,6 +347,7 @@ export type Database = {
       search_book_listings: {
         Args: {
           p_query?: string | null;
+          p_city?: string | null;
           p_category?: string | null;
           p_free_only?: boolean;
           p_min_price?: number | null;

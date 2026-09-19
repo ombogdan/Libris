@@ -22,6 +22,7 @@ export function FeedFiltersModal({
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const [condition, setCondition] = useState(filters.condition);
+  const [freeOnly, setFreeOnly] = useState(filters.freeOnly);
   const [minPrice, setMinPrice] = useState(filters.minPrice?.toString() ?? '');
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice?.toString() ?? '');
   const [radiusKm, setRadiusKm] = useState(filters.radiusKm);
@@ -38,6 +39,7 @@ export function FeedFiltersModal({
       return;
     }
     setCondition(filters.condition);
+    setFreeOnly(filters.freeOnly);
     setMinPrice(filters.minPrice?.toString() ?? '');
     setMaxPrice(filters.maxPrice?.toString() ?? '');
     setRadiusKm(filters.radiusKm);
@@ -49,6 +51,7 @@ export function FeedFiltersModal({
     const parsedMax = Number(maxPrice.replace(',', '.'));
     onApply({
       condition,
+      freeOnly,
       minPrice:
         minPrice.trim() && Number.isFinite(parsedMin) ? parsedMin : null,
       maxPrice:
@@ -74,6 +77,20 @@ export function FeedFiltersModal({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <Text style={styles.label}>{t('filters.priceType')}</Text>
+            <View style={styles.chips}>
+              <Chip
+                label={t('filters.anyPrice')}
+                active={!freeOnly}
+                onPress={() => setFreeOnly(false)}
+              />
+              <Chip
+                label={t('feed.free')}
+                active={freeOnly}
+                onPress={() => setFreeOnly(true)}
+              />
+            </View>
+
             <Text style={styles.label}>{t('filters.condition')}</Text>
             <View style={styles.chips}>
               <Chip

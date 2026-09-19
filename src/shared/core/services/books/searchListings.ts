@@ -4,6 +4,7 @@ export type FeedSort = 'recent' | 'price_asc' | 'price_desc' | 'distance';
 
 export type FeedFilters = {
   query: string;
+  city: string | null;
   category: string | null;
   freeOnly: boolean;
   minPrice: number | null;
@@ -43,6 +44,7 @@ const PAGE_SIZE = 20;
 export async function searchBookListings(filters: FeedFilters, offset: number) {
   const { data, error } = await supabase.rpc('search_book_listings', {
     p_query: filters.query.trim() || null,
+    p_city: filters.city?.trim() || null,
     p_category: filters.category,
     p_free_only: filters.freeOnly,
     p_min_price: filters.minPrice,
