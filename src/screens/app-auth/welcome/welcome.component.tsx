@@ -1,13 +1,40 @@
-import { t } from 'shared/localization/i18n';
-import React from 'react';
+import { formatBooksCount, t } from 'shared/localization/i18n';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, Chip } from 'shared/components/ui';
+import { fetchWelcomeStats } from 'services/books';
+import type { WelcomeStats } from 'services/books';
 import { useStyles } from './welcome.styles';
 import type { WelcomeScreenProps } from './welcome.types';
 
 export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
   const styles = useStyles();
+  const [stats, setStats] = useState<WelcomeStats | null>(null);
+  const [statsLoaded, setStatsLoaded] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetchWelcomeStats()
+      .then(result => {
+        if (mounted) {
+          setStats(result);
+        }
+      })
+      .catch(() => {
+        // The welcome screen remains usable when the public stats request fails.
+      })
+      .finally(() => {
+        if (mounted) {
+          setStatsLoaded(true);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <View style={styles.page}>
@@ -19,14 +46,24 @@ export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
         <Text style={styles.subtitle}>{t('welcome.subtitle')}</Text>
       </View>
       <View>
-        <View style={styles.tags}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{t('welcome.nearbyBooks')}</Text>
+        {stats || !statsLoaded ? (
+          <View style={styles.tags}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>
+                {stats
+                  ? t('welcome.availableBooks', {
+                      books: formatBooksCount(stats.listingCount),
+                    })
+                  : t('welcome.loadingStats')}
+              </Text>
+            </View>
+            {stats?.popularCities.length ? (
+              <Chip label={stats.popularCities.join(' · ')} />
+            ) : null}
           </View>
-          <Chip label={t('welcome.cities')} />
-        </View>
+        ) : null}
         <Button
-          label={t('welcome.createAccount')}
+          label={t('welcome.signInOrCreate')}
           onPress={() => navigation.navigate('Signup')}
         />
         <Button

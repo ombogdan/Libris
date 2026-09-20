@@ -404,6 +404,13 @@ export type Database = {
       };
     };
     Functions: {
+      get_welcome_stats: {
+        Args: Record<string, never>;
+        Returns: Array<{
+          listing_count: number;
+          popular_cities: string[];
+        }>;
+      };
       get_public_book_listing: {
         Args: { p_listing_id: string };
         Returns: PublicBookListing[];

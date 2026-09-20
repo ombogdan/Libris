@@ -1,7 +1,8 @@
 import { t } from 'shared/localization/i18n';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from 'shared/components/ui';
 import { signInWithGoogle } from 'services/auth';
@@ -10,7 +11,11 @@ import { useStyles } from './signup.styles';
 import type { SignupScreenProps } from './signup.types';
 
 export function SignupScreen({ navigation }: SignupScreenProps) {
-  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const styles = useStyles({
+    topInset: insets.top,
+    bottomInset: insets.bottom,
+  });
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,9 +28,7 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
     } catch (caught) {
       console.warn('Google sign-in failed', caught);
       setError(
-        caught instanceof Error
-          ? caught.message
-          : t('signup.googleError'),
+        caught instanceof Error ? caught.message : t('signup.googleError'),
       );
     } finally {
       setIsLoading(false);
@@ -34,8 +37,22 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
 
   return (
     <View style={styles.page}>
-      <Pressable onPress={navigation.goBack}>
-        <Text style={styles.back}>← {t('common.back')}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('common.back')}
+        hitSlop={styles.hitSlop}
+        onPress={() => navigation.goBack()}
+        style={({ pressed }) => [
+          styles.backButton,
+          pressed && styles.backButtonPressed,
+        ]}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={styles.backIconSize}
+          color={theme.palette.accent700}
+        />
+        <Text style={styles.backText}>{t('common.back')}</Text>
       </Pressable>
       <View style={styles.content}>
         <View style={styles.logo}>
@@ -44,17 +61,21 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
         <Text style={styles.title}>{t('signup.title')}</Text>
         <Text style={styles.subtitle}>{t('signup.subtitle')}</Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('signup.continueWithGoogle')}
+          accessibilityState={{ disabled: isLoading, busy: isLoading }}
           disabled={isLoading}
           onPress={handleGoogleSignIn}
           style={({ pressed }) => [
             styles.googleButton,
-            (pressed || isLoading) && styles.pressed,
+            pressed && styles.googleButtonPressed,
+            isLoading && styles.googleButtonDisabled,
           ]}
         >
-          <Ionicons
-            name="logo-google"
-            size={styles.iconSize}
-            color={theme.palette.text}
+          <Image
+            source={require('../../../shared/assets/images/google-g.png')}
+            resizeMode="contain"
+            style={styles.googleIcon}
           />
           <Text style={styles.googleText}>
             {isLoading ? t('signup.signingIn') : t('signup.continueWithGoogle')}

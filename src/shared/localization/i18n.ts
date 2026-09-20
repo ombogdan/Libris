@@ -184,7 +184,7 @@ function countLabel(count: number, noun: CountNoun) {
     getAppLocale() === 'uk'
       ? ukrainianCountKey(count, noun)
       : `counts.${noun}${count === 1 ? 'One' : 'Many'}`;
-  return t(key, { count });
+  return t(key, { count: count.toLocaleString(getLocaleTag()) });
 }
 
 export const formatListingsCount = (count: number) =>

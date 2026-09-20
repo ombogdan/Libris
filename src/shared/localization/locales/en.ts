@@ -29,10 +29,10 @@ export default {
   welcome: {
     title: 'Books that\nmove forward',
     subtitle:
-      'Sell books you have read, give them away, and find textbooks in your city.',
-    nearbyBooks: '1,240 books nearby',
-    cities: 'Poltava · Kyiv · Lviv',
-    createAccount: 'Create account',
+      'Sell books you have read, discover new stories, and connect with people nearby.',
+    availableBooks: '{{books}} on Libris',
+    loadingStats: 'Finding books…',
+    signInOrCreate: 'Sign in or create account',
     browseFirst: 'Browse first',
   },
   signup: {

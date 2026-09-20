@@ -50,7 +50,7 @@ export const useStyles = createStyles(({ theme, scale }: any) =>
       backgroundColor: theme.palette.violet200,
       borderRadius: scale(999),
       paddingHorizontal: scale(13),
-      paddingVertical: scale(9),
+      justifyContent: 'center',
     },
     tagText: {
       color: theme.palette.violet800,
