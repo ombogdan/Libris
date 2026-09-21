@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   Button,
   Chip,
@@ -237,7 +238,11 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
               {book.city} · {book.sellerAds}
             </Text>
           </View>
-          <Text style={styles.sellerArrow}>›</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={styles.iconSizes.sellerArrow}
+            color={styles.colors.sellerArrow}
+          />
         </Pressable>
         {!isOwnListing ? <SafetyTip /> : null}
         <Button

@@ -2,8 +2,8 @@ import { StyleSheet } from 'react-native';
 import { createStyles } from 'shared/theme/createStyles';
 
 export const useStyles = createStyles(
-  ({ theme, scale, bottomInset = 0 }: any) =>
-    StyleSheet.create({
+  ({ theme, scale, bottomInset = 0 }: any) => ({
+    ...StyleSheet.create({
       screen: {
         flex: 1,
         backgroundColor: theme.palette.background,
@@ -58,11 +58,6 @@ export const useStyles = createStyles(
       },
       sellerPressed: { opacity: 0.72 },
       sellerInfo: { flex: 1, gap: scale(2) },
-      sellerArrow: {
-        color: theme.palette.neutral500,
-        fontSize: scale(26),
-        lineHeight: scale(30),
-      },
       avatar: {
         width: scale(46),
         height: scale(46),
@@ -93,4 +88,7 @@ export const useStyles = createStyles(
         color: theme.palette.error,
       },
     }),
+    colors: { sellerArrow: theme.palette.neutral500 },
+    iconSizes: { sellerArrow: scale(22) },
+  }),
 );

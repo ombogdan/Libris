@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { createStyles } from 'shared/theme/createStyles';
 
 export const useStyles = createStyles(
-  ({ theme, scale, bottomInset = 0 }: any) => ({
+  ({ theme, scale, bottomInset = 0, keyboardVisible = false }: any) => ({
     ...StyleSheet.create({
       flex: { flex: 1 },
       screen: {
@@ -22,11 +22,6 @@ export const useStyles = createStyles(
         gap: scale(10),
       },
       contactPressed: { opacity: 0.72 },
-      contactArrow: {
-        color: theme.palette.neutral500,
-        fontSize: scale(24),
-        lineHeight: scale(28),
-      },
       contactDetails: {
         flex: 1,
         gap: scale(2),
@@ -164,7 +159,10 @@ export const useStyles = createStyles(
         gap: scale(8),
         paddingHorizontal: scale(18),
         paddingTop: scale(8),
-        paddingBottom: Math.max(bottomInset, scale(10)),
+        // The keyboard already covers the system bar, so no inset while it is up.
+        paddingBottom: keyboardVisible
+          ? scale(10)
+          : Math.max(bottomInset, scale(10)),
         borderTopWidth: scale(1),
         borderTopColor: theme.palette.divider,
         backgroundColor: theme.palette.background,
@@ -187,7 +185,7 @@ export const useStyles = createStyles(
       },
       input: {
         flex: 1,
-        minHeight: scale(44),
+        minHeight: scale(46),
         maxHeight: scale(104),
         borderRadius: scale(22),
         backgroundColor: theme.palette.white,
@@ -201,8 +199,8 @@ export const useStyles = createStyles(
         lineHeight: scale(20),
       },
       send: {
-        width: scale(44),
-        height: scale(44),
+        width: scale(46),
+        height: scale(46),
         borderRadius: scale(999),
         backgroundColor: theme.palette.accent,
         alignItems: 'center',
@@ -210,12 +208,6 @@ export const useStyles = createStyles(
       },
       sendDisabled: { backgroundColor: theme.palette.neutral400 },
       sendPressed: { opacity: 0.72 },
-      sendText: {
-        color: theme.palette.background,
-        fontSize: scale(24),
-        lineHeight: scale(27),
-        fontWeight: '800',
-      },
       headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -248,7 +240,10 @@ export const useStyles = createStyles(
     colors: {
       placeholder: theme.palette.neutral500,
       menuIcon: theme.palette.text,
+      contactArrow: theme.palette.neutral500,
+      sendIcon: theme.palette.background,
     },
+    iconSizes: { contactArrow: scale(22), send: scale(26) },
     menuIconSize: scale(22),
     menuOffset: scale(4),
     menuHitSlop: scale(6),

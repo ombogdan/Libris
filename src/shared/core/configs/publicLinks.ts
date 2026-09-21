@@ -1,6 +1,6 @@
 import { env } from './env';
 
-const DEFAULT_PUBLIC_WEB_URL = 'https://libris-app.onrender.com';
+const DEFAULT_PUBLIC_WEB_URL = 'https://libris-app-zzh4.onrender.com';
 
 export const publicWebUrl = (
   env.publicWebUrl || DEFAULT_PUBLIC_WEB_URL

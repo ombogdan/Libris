@@ -137,6 +137,7 @@ function Tabs() {
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: tabIconRenderers[route.name],
         tabBarButton: renderTabBarButton,
+        tabBarHideOnKeyboard: true,
       })}
     >
       <Tab.Screen

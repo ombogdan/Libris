@@ -44,11 +44,6 @@ export const useStyles = createStyles(({ theme, scale }: any) => ({
       justifyContent: 'center',
       backgroundColor: theme.palette.overlay,
     },
-    removeText: {
-      color: theme.palette.white,
-      fontSize: scale(20),
-      lineHeight: scale(22),
-    },
     coverBadge: {
       position: 'absolute',
       left: scale(6),
@@ -63,12 +58,13 @@ export const useStyles = createStyles(({ theme, scale }: any) => ({
       fontSize: scale(9),
       fontWeight: '700',
     },
-    plus: { fontSize: scale(28), color: theme.palette.accent },
     addText: {
       fontSize: scale(10),
       textAlign: 'center',
       color: theme.palette.neutral600,
     },
   }),
+  colors: { removeIcon: theme.palette.white, addIcon: theme.palette.accent },
+  iconSizes: { remove: scale(18), add: scale(32) },
   hitSlop: scale(8),
 }));

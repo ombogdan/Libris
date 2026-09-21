@@ -24,7 +24,6 @@ import {
 } from 'react-native';
 import type {
   KeyboardEvent,
-  KeyboardEventName,
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -56,7 +55,8 @@ const NEAR_BOTTOM_OFFSET = 96;
 
 export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   const insets = useSafeAreaInsets();
-  const styles = useStyles({ bottomInset: insets.bottom });
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const styles = useStyles({ bottomInset: insets.bottom, keyboardVisible });
   const { theme } = useTheme();
   const app = useAppStore();
   const chatId = route.params.chatId;
@@ -198,6 +198,8 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
     setOverlayHeight(event.nativeEvent.layout.height);
   }, []);
 
+  // iOS only: the window keeps its size under the keyboard, so the composer is
+  // lifted by hand. Android's adjustResize already shrinks the window.
   const applyKeyboardMetrics = useCallback(
     (event: KeyboardEvent) => {
       const { y, height } = pageFrame.current;
@@ -207,25 +209,30 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
       const overlap = insets.top + y + height - event.endCoordinates.screenY;
       Keyboard.scheduleLayoutAnimation(event);
       setKeyboardPadding(Math.max(overlap, 0));
+      setKeyboardVisible(overlap > 0);
     },
     [insets.top],
   );
 
   useEffect(() => {
-    const showEvent: KeyboardEventName =
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent: KeyboardEventName =
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const frameEvent: KeyboardEventName =
+    const subscriptions =
       Platform.OS === 'ios'
-        ? 'keyboardWillChangeFrame'
-        : 'keyboardDidChangeFrame';
-
-    const subscriptions = [
-      Keyboard.addListener(showEvent, applyKeyboardMetrics),
-      Keyboard.addListener(hideEvent, applyKeyboardMetrics),
-      Keyboard.addListener(frameEvent, applyKeyboardMetrics),
-    ];
+        ? [
+            Keyboard.addListener('keyboardWillShow', applyKeyboardMetrics),
+            Keyboard.addListener('keyboardWillHide', applyKeyboardMetrics),
+            Keyboard.addListener(
+              'keyboardWillChangeFrame',
+              applyKeyboardMetrics,
+            ),
+          ]
+        : [
+            Keyboard.addListener('keyboardDidShow', () =>
+              setKeyboardVisible(true),
+            ),
+            Keyboard.addListener('keyboardDidHide', () =>
+              setKeyboardVisible(false),
+            ),
+          ];
 
     return () => subscriptions.forEach(subscription => subscription.remove());
   }, [applyKeyboardMetrics]);
@@ -481,7 +488,11 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
                   {chat.about}
                 </Text>
               </View>
-              <Text style={styles.contactArrow}>›</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={styles.iconSizes.contactArrow}
+                color={styles.colors.contactArrow}
+              />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -554,7 +565,9 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
             ]}
             ListHeaderComponent={historyHeader}
             ListEmptyComponent={
-              <Text style={styles.emptyMessagesText}>{t('thread.firstMessage')}</Text>
+              <Text style={styles.emptyMessagesText}>
+                {t('thread.firstMessage')}
+              </Text>
             }
             refreshControl={
               <RefreshControl
@@ -602,7 +615,9 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
           {isDeleted ? (
             <View style={styles.readOnlyComposer}>
-              <Text style={styles.readOnlyText}>{t('thread.deletedReadonly')}</Text>
+              <Text style={styles.readOnlyText}>
+                {t('thread.deletedReadonly')}
+              </Text>
             </View>
           ) : (
             <View style={styles.compose}>
@@ -631,7 +646,11 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
                   pressed && styles.sendPressed,
                 ]}
               >
-                <Text style={styles.sendText}>↑</Text>
+                <Ionicons
+                  name="arrow-up"
+                  size={styles.iconSizes.send}
+                  color={styles.colors.sendIcon}
+                />
               </Pressable>
             </View>
           )}

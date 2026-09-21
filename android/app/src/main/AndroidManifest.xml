@@ -49,11 +49,11 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data
               android:scheme="https"
-              android:host="libris-app.onrender.com"
+              android:host="libris-app-zzh4.onrender.com"
               android:pathPrefix="/book/" />
             <data
               android:scheme="https"
-              android:host="libris-app.onrender.com"
+              android:host="libris-app-zzh4.onrender.com"
               android:pathPrefix="/profile/" />
         </intent-filter>
       </activity>

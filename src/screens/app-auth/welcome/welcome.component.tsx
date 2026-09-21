@@ -7,9 +7,11 @@ import { fetchWelcomeStats } from 'services/books';
 import type { WelcomeStats } from 'services/books';
 import { useStyles } from './welcome.styles';
 import type { WelcomeScreenProps } from './welcome.types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
   const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [stats, setStats] = useState<WelcomeStats | null>(null);
   const [statsLoaded, setStatsLoaded] = useState(false);
 
@@ -71,6 +73,7 @@ export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
           label={t('welcome.browseFirst')}
           onPress={() => navigation.replace('Tabs', { screen: 'Feed' })}
         />
+        <View style={{ height: insets.bottom }} />
       </View>
     </View>
   );

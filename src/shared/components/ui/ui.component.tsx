@@ -10,6 +10,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Book } from 'shared/data';
 import { useStyles } from './ui.styles';
 
@@ -182,9 +183,11 @@ export function BookRow({
         onPress={onHeart}
         style={styles.heart}
       >
-        <Text style={[styles.heartText, favorite && styles.heartTextActive]}>
-          {favorite ? '♥' : '♡'}
-        </Text>
+        <Ionicons
+          name={favorite ? 'heart' : 'heart-outline'}
+          size={styles.iconSizes.heart}
+          color={favorite ? styles.colors.heartActive : styles.colors.heartIdle}
+        />
       </Pressable>
     </Pressable>
   );
@@ -228,7 +231,11 @@ export function ScreenHeader({
             onPress={onBack}
             style={styles.screenHeaderBack}
           >
-            <Text style={styles.screenHeaderBackText}>←</Text>
+            <Ionicons
+              name="chevron-back"
+              size={styles.iconSizes.back}
+              color={styles.colors.backIcon}
+            />
           </Pressable>
         ) : null}
         <View style={styles.screenHeaderContent}>
@@ -244,7 +251,11 @@ export function Empty({ text }: { text: string }) {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
-        <Text style={styles.heartText}>♡</Text>
+        <Ionicons
+          name="heart-outline"
+          size={styles.iconSizes.emptyHeart}
+          color={styles.colors.heartIdle}
+        />
       </View>
       <Text style={styles.emptyText}>{text}</Text>
     </View>

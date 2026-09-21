@@ -2,6 +2,7 @@ import { t } from 'shared/localization/i18n';
 import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { Asset, launchImageLibrary } from 'react-native-image-picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useCommonStyles } from 'shared/components/ui';
 import type { LocalBookImage } from 'services/books';
 import { useStyles } from './book-images-picker.styles';
@@ -125,13 +126,21 @@ export function BookImagesPicker({
               }
               style={styles.removeButton}
             >
-              <Text style={styles.removeText}>×</Text>
+              <Ionicons
+                name="close"
+                size={styles.iconSizes.remove}
+                color={styles.colors.removeIcon}
+              />
             </Pressable>
           </View>
         ))}
         {images.length < 5 ? (
           <Pressable onPress={selectImages} style={styles.addButton}>
-            <Text style={styles.plus}>＋</Text>
+            <Ionicons
+              name="add"
+              size={styles.iconSizes.add}
+              color={styles.colors.addIcon}
+            />
             <Text style={styles.addText}>
               {images.length ? t('images.addMore') : t('images.choose')}
             </Text>

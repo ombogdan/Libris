@@ -204,7 +204,6 @@ export function EditListingScreen({
         style={styles.scroll}
         contentContainerStyle={[common.page, styles.page]}
         keyboardShouldPersistTaps="handled"
-        enableOnAndroid
         enableResetScrollToCoords={false}
         extraScrollHeight={styles.keyboardExtraScrollHeight}
         keyboardOpeningTime={0}

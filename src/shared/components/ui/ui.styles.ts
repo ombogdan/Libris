@@ -141,8 +141,6 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         alignItems: 'center',
         justifyContent: 'center',
       },
-      heartText: { fontSize: scale(26), color: theme.palette.neutral400 },
-      heartTextActive: { color: theme.palette.accent },
       heading: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -165,17 +163,12 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         flex: 1,
       },
       screenHeaderBack: {
-        width: scale(40),
-        height: scale(40),
-        marginRight: scale(8),
+        width: scale(44),
+        height: scale(44),
+        marginLeft: scale(-8),
+        marginRight: scale(4),
         alignItems: 'center',
         justifyContent: 'center',
-      },
-      screenHeaderBackText: {
-        color: theme.palette.accent700,
-        fontSize: scale(24),
-        lineHeight: scale(28),
-        fontWeight: '700',
       },
       h2: {
         fontSize: scale(30),
@@ -227,7 +220,13 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         color: theme.palette.text,
       },
     }),
-    colors: { placeholder: theme.palette.neutral500 },
+    colors: {
+      placeholder: theme.palette.neutral500,
+      backIcon: theme.palette.accent700,
+      heartIdle: theme.palette.neutral400,
+      heartActive: theme.palette.accent,
+    },
+    iconSizes: { back: scale(30), heart: scale(26), emptyHeart: scale(26) },
     hitSlop: scale(8),
   };
 });
