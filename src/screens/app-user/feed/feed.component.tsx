@@ -24,6 +24,7 @@ import type { Book } from 'shared/data';
 import { useAppStore } from 'store/AppStore';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { useTheme } from 'shared/theme';
+import { fetchActiveListingCities } from 'services/books';
 import type { FeedSort } from 'services/books';
 import { FeedFilterButton } from './components/feed-filter-button';
 import { FeedFiltersModal } from './components/feed-filters-modal';
@@ -53,6 +54,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
   const hasLocation = Boolean(profile?.latitude && profile?.longitude);
   const filters = store.feedFilters;
   const setFeedFilters = store.setFeedFilters;
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     if (initialCityApplied.current || !profile?.city) {
@@ -61,6 +63,21 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
     initialCityApplied.current = true;
     setFeedFilters({ city: profile.city });
   }, [profile?.city, setFeedFilters]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchActiveListingCities()
+      .then(cities => {
+        if (!cancelled) {
+          setCitySuggestions(cities);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const locationOptions = useMemo(() => {
     const options: { value: string | null; label: string }[] = [
@@ -228,6 +245,7 @@ export function FeedScreen({ navigation }: FeedScreenProps) {
         customLabel={t('filters.otherLocation')}
         customPlaceholder={t('filters.cityVillagePlaceholder')}
         customValue={filters.city ?? ''}
+        suggestions={citySuggestions}
         onClose={() => setSelectOpen(null)}
         onSelect={city => {
           initialCityApplied.current = true;

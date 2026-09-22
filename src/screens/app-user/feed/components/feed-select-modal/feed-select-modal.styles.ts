@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { createStyles } from 'shared/theme/createStyles';
 
 export const useStyles = createStyles(
-  ({ theme, scale, bottomInset = 0 }: any) => ({
+  ({ theme, scale, bottomInset = 0, keyboardHeight = 0 }: any) => ({
     ...StyleSheet.create({
       overlay: {
         flex: 1,
@@ -12,6 +12,9 @@ export const useStyles = createStyles(
       },
       card: {
         maxHeight: '78%',
+        // Pushes the sheet clear of the keyboard — it opens with no resize
+        // treatment of its own on either platform.
+        marginBottom: keyboardHeight,
         backgroundColor: theme.palette.background,
         borderTopLeftRadius: scale(28),
         borderTopRightRadius: scale(28),
@@ -90,8 +93,32 @@ export const useStyles = createStyles(
         color: theme.palette.text,
         fontSize: scale(14),
       },
+      suggestions: {
+        borderRadius: scale(16),
+        borderWidth: scale(1),
+        borderColor: theme.palette.divider,
+        backgroundColor: theme.palette.white,
+        overflow: 'hidden',
+      },
+      suggestion: {
+        minHeight: scale(42),
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: scale(8),
+        paddingHorizontal: scale(14),
+        borderBottomWidth: scale(1),
+        borderBottomColor: theme.palette.divider,
+      },
+      suggestionLast: { borderBottomWidth: 0 },
+      suggestionText: {
+        flex: 1,
+        color: theme.palette.text,
+        fontSize: scale(13),
+        fontWeight: '600',
+      },
     }),
     closeIconSize: scale(22),
+    suggestionIconSize: scale(16),
     hitSlop: scale(8),
     colors: {
       placeholder: theme.palette.neutral500,

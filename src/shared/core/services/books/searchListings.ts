@@ -45,3 +45,16 @@ export async function searchBookListings(filters: FeedFilters, offset: number) {
   const rows = (data ?? []) as FeedListingRow[];
   return { rows, hasMore: rows.length === PAGE_SIZE };
 }
+
+// Feeds the location filter's suggestion list — cities that actually have
+// active listings, since search_book_listings matches p_city exactly and a
+// typo or a different spelling otherwise just returns nothing silently.
+export async function fetchActiveListingCities(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_active_listing_cities');
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map(row => row.city);
+}

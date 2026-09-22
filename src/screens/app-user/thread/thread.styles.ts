@@ -224,7 +224,7 @@ export const useStyles = createStyles(
       menu: {
         position: 'absolute',
         right: scale(18),
-        width: scale(236),
+        width: scale(260),
         paddingHorizontal: scale(14),
         borderRadius: scale(18),
         borderWidth: scale(1),

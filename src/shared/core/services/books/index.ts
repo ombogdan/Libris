@@ -15,7 +15,10 @@ export {
 } from './listingImages';
 export type { ListingImageRecord } from './listingImages';
 export { fetchPublicBookListing } from './publicListing';
-export { searchBookListings } from './searchListings';
+export {
+  fetchActiveListingCities,
+  searchBookListings,
+} from './searchListings';
 export type { FeedFilters, FeedListingRow, FeedSort } from './searchListings';
 export { fetchWelcomeStats } from './welcomeStats';
 export type { WelcomeStats } from './welcomeStats';

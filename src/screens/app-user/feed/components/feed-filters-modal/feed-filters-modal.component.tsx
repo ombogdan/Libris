@@ -4,6 +4,7 @@ import { Modal, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Chip, Field } from 'shared/components/ui';
+import { useKeyboardHeight } from 'hooks/useKeyboardHeight';
 import type { FeedSort } from 'services/books';
 import { useStyles } from './feed-filters-modal.styles';
 import type { FeedFiltersModalProps } from './feed-filters-modal.types';
@@ -20,7 +21,8 @@ export function FeedFiltersModal({
   onReset,
 }: FeedFiltersModalProps) {
   const insets = useSafeAreaInsets();
-  const styles = useStyles({ bottomInset: insets.bottom });
+  const keyboardHeight = useKeyboardHeight();
+  const styles = useStyles({ bottomInset: insets.bottom, keyboardHeight });
   const [condition, setCondition] = useState(filters.condition);
   const [freeOnly, setFreeOnly] = useState(filters.freeOnly);
   const [minPrice, setMinPrice] = useState(filters.minPrice?.toString() ?? '');
@@ -49,13 +51,28 @@ export function FeedFiltersModal({
   const apply = () => {
     const parsedMin = Number(minPrice.replace(',', '.'));
     const parsedMax = Number(maxPrice.replace(',', '.'));
+    // "Free" already means price = 0, so a price range alongside it can
+    // only contradict it (e.g. "from 100") and silently zero out results —
+    // free wins and the range is dropped.
+    let nextMin =
+      !freeOnly && minPrice.trim() && Number.isFinite(parsedMin)
+        ? parsedMin
+        : null;
+    let nextMax =
+      !freeOnly && maxPrice.trim() && Number.isFinite(parsedMax)
+        ? parsedMax
+        : null;
+    // Same for a "from" typed higher than "to" — swap instead of returning
+    // nothing.
+    if (nextMin !== null && nextMax !== null && nextMin > nextMax) {
+      [nextMin, nextMax] = [nextMax, nextMin];
+    }
+
     onApply({
       condition,
       freeOnly,
-      minPrice:
-        minPrice.trim() && Number.isFinite(parsedMin) ? parsedMin : null,
-      maxPrice:
-        maxPrice.trim() && Number.isFinite(parsedMax) ? parsedMax : null,
+      minPrice: nextMin,
+      maxPrice: nextMax,
       radiusKm: hasLocation ? radiusKm : null,
       sort: sort === 'distance' && !hasLocation ? 'recent' : sort,
     });
@@ -110,18 +127,24 @@ export function FeedFiltersModal({
 
             <Text style={styles.label}>{t('filters.priceRange')}</Text>
             <View style={styles.priceRow}>
-              <View style={styles.priceField}>
+              <View
+                style={[styles.priceField, freeOnly && styles.priceFieldOff]}
+              >
                 <Field
                   compact
+                  editable={!freeOnly}
                   label={t('filters.priceFrom')}
                   keyboardType="numeric"
                   value={minPrice}
                   onChangeText={setMinPrice}
                 />
               </View>
-              <View style={styles.priceField}>
+              <View
+                style={[styles.priceField, freeOnly && styles.priceFieldOff]}
+              >
                 <Field
                   compact
+                  editable={!freeOnly}
                   label={t('filters.priceTo')}
                   keyboardType="numeric"
                   value={maxPrice}

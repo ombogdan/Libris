@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { Button } from 'shared/components/ui';
+import { useKeyboardHeight } from 'hooks/useKeyboardHeight';
 import { t } from 'shared/localization/i18n';
 import { useStyles } from './feed-select-modal.styles';
 import type { FeedSelectModalProps } from './feed-select-modal.types';
@@ -18,9 +19,11 @@ export function FeedSelectModal({
   customLabel,
   customPlaceholder,
   customValue = '',
+  suggestions,
 }: FeedSelectModalProps) {
   const insets = useSafeAreaInsets();
-  const styles = useStyles({ bottomInset: insets.bottom });
+  const keyboardHeight = useKeyboardHeight();
+  const styles = useStyles({ bottomInset: insets.bottom, keyboardHeight });
   const [custom, setCustom] = useState(customValue);
 
   useEffect(() => {
@@ -33,6 +36,28 @@ export function FeedSelectModal({
     onSelect(nextValue);
     onClose();
   };
+
+  // search_book_listings matches the typed city exactly, so a suggestion
+  // list of values that actually have listings beats guessing the spelling.
+  const matchingSuggestions = useMemo(() => {
+    const query = custom.trim().toLowerCase();
+    if (!query || !suggestions?.length) {
+      return [];
+    }
+
+    const known = new Set(
+      options.map(option => option.value?.toLowerCase()).filter(Boolean),
+    );
+
+    return suggestions
+      .filter(
+        city =>
+          city.toLowerCase().includes(query) &&
+          city.toLowerCase() !== query &&
+          !known.has(city.toLowerCase()),
+      )
+      .slice(0, 6);
+  }, [custom, options, suggestions]);
 
   return (
     <Modal
@@ -104,6 +129,31 @@ export function FeedSelectModal({
                   }}
                   style={styles.input}
                 />
+                {matchingSuggestions.length ? (
+                  <View style={styles.suggestions}>
+                    {matchingSuggestions.map((city, index) => (
+                      <Pressable
+                        key={city}
+                        onPress={() => select(city)}
+                        style={({ pressed }) => [
+                          styles.suggestion,
+                          index === matchingSuggestions.length - 1 &&
+                            styles.suggestionLast,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <Ionicons
+                          name="location-outline"
+                          size={styles.suggestionIconSize}
+                          color={styles.colors.close}
+                        />
+                        <Text numberOfLines={1} style={styles.suggestionText}>
+                          {city}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
                 <Button
                   label={t('filters.choose')}
                   disabled={!custom.trim()}

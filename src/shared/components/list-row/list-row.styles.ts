@@ -17,17 +17,19 @@ export const useStyles = createStyles(({ theme, scale }: any) => ({
     pressed: { opacity: 0.6 },
     disabled: { opacity: 0.45 },
     label: {
-      flexShrink: 0,
-      maxWidth: '60%',
+      flex: 1,
       fontSize: scale(15),
       fontWeight: '600',
       color: theme.palette.text,
     },
     danger: { color: theme.palette.error },
-    // The value takes the remaining width and sits flush against the chevron,
-    // so numbers and text line up on the same right edge in every row.
+    // Sized to its own content (not flex: 1) so a label with no value or
+    // accessory — a plain menu item, a legal link — gets the full row width
+    // instead of losing 40% of it to an empty trailing area. The label
+    // shrinks and truncates first when both need more room than the row has,
+    // keeping the value/chevron flush against the right edge in every row.
     trailing: {
-      flex: 1,
+      flexShrink: 0,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',

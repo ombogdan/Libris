@@ -524,6 +524,10 @@ export type Database = {
           distance_km: number | null;
         }>;
       };
+      get_active_listing_cities: {
+        Args: Record<string, never>;
+        Returns: Array<{ city: string; listing_count: number }>;
+      };
       has_blocked: {
         Args: { p_blocker: string; p_blocked: string };
         Returns: boolean;
