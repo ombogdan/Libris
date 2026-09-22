@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "338376461945-13dbpnovrqgrad6rlhq32ns481b7filn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.libris",
+            "certificate_hash": "5de22047e3cf37ca2c7375ff6e5a76fdb1f8c2ea"
+          }
+        },
+        {
           "client_id": "338376461945-mm90n26o4253locci0a553ddfurqjbol.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
