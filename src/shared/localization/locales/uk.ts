@@ -460,4 +460,7 @@ export default {
       done: 'Акаунт видалено',
     },
   },
+  push: {
+    messagesChannel: 'Повідомлення',
+  },
 };

@@ -76,6 +76,17 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Release signing values must come from THIS project's gradle.properties,
+// never from a machine-wide ~/.gradle/gradle.properties (which, if it
+// happens to define the same MYAPP_RELEASE_* keys for another project,
+// silently wins over this file when read as ordinary Gradle properties).
+// Loading the file directly bypasses that merge entirely.
+def releaseSigningProps = new Properties()
+def releaseSigningPropsFile = rootProject.file("gradle.properties")
+if (releaseSigningPropsFile.exists()) {
+    releaseSigningPropsFile.withInputStream { releaseSigningProps.load(it) }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -86,23 +97,23 @@ android {
         applicationId "com.libris"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
+        versionCode 4
         versionName "1.0"
     }
     signingConfigs {
         debug {
-            storeFile file(MYAPP_RELEASE_STORE_FILE)
-            storePassword MYAPP_RELEASE_STORE_PASSWORD
-            keyAlias MYAPP_RELEASE_KEY_ALIAS
-            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            // The values come from android/gradle.properties (loaded above);
+            // the file path is resolved relative to this module (android/app).
+            storeFile file(releaseSigningProps['MYAPP_RELEASE_STORE_FILE'])
+            storePassword releaseSigningProps['MYAPP_RELEASE_STORE_PASSWORD']
+            keyAlias releaseSigningProps['MYAPP_RELEASE_KEY_ALIAS']
+            keyPassword releaseSigningProps['MYAPP_RELEASE_KEY_PASSWORD']
         }
         release {
-            // The values come from android/gradle.properties; the file is
-            // resolved relative to this module (android/app).
-            storeFile file(MYAPP_RELEASE_STORE_FILE)
-            storePassword MYAPP_RELEASE_STORE_PASSWORD
-            keyAlias MYAPP_RELEASE_KEY_ALIAS
-            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            storeFile file(releaseSigningProps['MYAPP_RELEASE_STORE_FILE'])
+            storePassword releaseSigningProps['MYAPP_RELEASE_STORE_PASSWORD']
+            keyAlias releaseSigningProps['MYAPP_RELEASE_KEY_ALIAS']
+            keyPassword releaseSigningProps['MYAPP_RELEASE_KEY_PASSWORD']
         }
     }
     buildTypes {
@@ -128,3 +139,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Must be applied after the android {} block so it can read google-services.json.
+apply plugin: "com.google.gms.google-services"

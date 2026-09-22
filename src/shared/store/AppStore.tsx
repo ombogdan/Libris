@@ -19,6 +19,12 @@ import { AppState } from 'react-native';
 
 import { Ad, Book, Chat, Message } from 'shared/data';
 import { useAuth } from 'providers/auth/AuthProvider';
+import {
+  attachForegroundMessageListener,
+  attachNotificationTapListener,
+  attachTokenRefreshListener,
+  registerPushToken,
+} from 'services/push';
 import { supabase } from 'services/supabase';
 import type {
   BookListing,
@@ -661,6 +667,26 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       blockedUsersRequest.current += 1;
     };
   }, [reloadBlockedUsers]);
+
+  // Listeners are attached once and stay active regardless of auth state;
+  // without a registered token no message ever reaches this device anyway.
+  useEffect(() => {
+    const unsubscribeMessages = attachForegroundMessageListener();
+    const unsubscribeTaps = attachNotificationTapListener();
+    const unsubscribeTokenRefresh = attachTokenRefreshListener();
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeTaps();
+      unsubscribeTokenRefresh();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (session?.user.id) {
+      void registerPushToken();
+    }
+  }, [session?.user.id]);
 
   const toggleFav = useCallback(
     async (id: string) => {

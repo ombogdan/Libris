@@ -209,6 +209,15 @@ export type Report = {
   created_at: string;
 };
 
+export type PushToken = {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: 'android' | 'ios';
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProfileReviewSummary = {
   user_id: string;
   rating_average: number;
@@ -380,6 +389,12 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      push_tokens: {
+        Row: PushToken;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: {
       listing_seller_profiles: {
@@ -528,6 +543,14 @@ export type Database = {
           p_listing_id?: string | null;
           p_comment?: string;
         };
+        Returns: undefined;
+      };
+      upsert_push_token: {
+        Args: { p_token: string; p_platform: 'android' | 'ios' };
+        Returns: undefined;
+      };
+      remove_push_token: {
+        Args: { p_token: string };
         Returns: undefined;
       };
     };

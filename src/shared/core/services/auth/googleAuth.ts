@@ -3,6 +3,7 @@ import {
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { env } from 'configs/env';
+import { unregisterPushToken } from 'services/push';
 import { supabase } from 'services/supabase';
 
 GoogleSignin.configure({
@@ -40,5 +41,8 @@ export async function signInWithGoogle() {
 }
 
 export async function signOutFromGoogle() {
+  // Unregister the device's push token first, while the session that owns it
+  // is still valid — the RPC needs auth.uid() to know which row to remove.
+  await unregisterPushToken().catch(() => undefined);
   await Promise.allSettled([GoogleSignin.signOut(), supabase.auth.signOut()]);
 }

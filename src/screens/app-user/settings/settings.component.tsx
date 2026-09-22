@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, ScrollView, View } from 'react-native';
+import { Linking, ScrollView, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -30,12 +30,13 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const store = useAppStore();
-  const { session, profile } = useAuth();
+  const { session, profile, updateProfile } = useAuth();
   const { preference } = useLocale();
   const editor = useProfileEditor();
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSavingNotifyMessages, setIsSavingNotifyMessages] = useState(false);
 
   const name =
     profile?.display_name.trim() ||
@@ -47,6 +48,17 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     if (!isDeleting) {
       setDeleteVisible(false);
       setDeleteError(null);
+    }
+  };
+
+  const toggleNotifyMessages = async (value: boolean) => {
+    setIsSavingNotifyMessages(true);
+    try {
+      await updateProfile({ notify_messages: value });
+    } catch {
+      store.notify(t('settings.notifications.saveError'));
+    } finally {
+      setIsSavingNotifyMessages(false);
     }
   };
 
@@ -113,6 +125,22 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               }
             />
           ))}
+        </SettingsSection>
+
+        <SettingsSection title={t('settings.notifications.title')}>
+          <ListRow
+            label={t('settings.notifications.messages')}
+            showChevron={false}
+            isLast
+            accessory={
+              <Switch
+                value={profile?.notify_messages ?? true}
+                onValueChange={value => void toggleNotifyMessages(value)}
+                disabled={isSavingNotifyMessages}
+                trackColor={{ true: styles.colors.accent }}
+              />
+            }
+          />
         </SettingsSection>
 
         <SettingsSection title={t('settings.privacy.title')}>

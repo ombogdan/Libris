@@ -32,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { getFriendlyErrorMessage } from 'services/moderation';
+import { setActiveConversationId } from 'services/push';
 import { ListRow } from 'shared/components/list-row';
 import { ReportModal, useReportFlow } from 'shared/components/report-modal';
 import { Button, Chip, Empty, ScreenHeader } from 'shared/components/ui';
@@ -97,9 +98,13 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
 
   useFocusEffect(
     useCallback(() => {
+      // Suppresses a system push notification for this exact chat while it's
+      // the one on screen — messages already arrive live via the polling below.
+      setActiveConversationId(activeChatId ?? null);
+
       if (!activeChatId) {
         void reloadChats().catch(() => undefined);
-        return undefined;
+        return () => setActiveConversationId(null);
       }
 
       void reloadChats({ silent: true }).catch(() => undefined);
@@ -114,7 +119,10 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         }).catch(() => undefined);
       }, 7_000);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        setActiveConversationId(null);
+      };
     }, [activeChatId, loadChatMessages, reloadChats]),
   );
 

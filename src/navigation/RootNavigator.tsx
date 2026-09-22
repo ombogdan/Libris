@@ -11,6 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from 'providers/auth/AuthProvider';
+import { consumePendingPushConversationId } from 'services/push';
 import { t, useLocale } from 'shared/localization/i18n';
 import { useAppStore } from 'store/AppStore';
 import {
@@ -33,6 +34,7 @@ import {
 } from 'screens';
 import { useTheme } from 'shared/theme';
 import { linking } from './linking';
+import { navigateToChat, navigationRef } from './navigationRef';
 import { useStyles } from './RootNavigator.styles';
 import type { RootStackParamList, TabParamList } from 'types/navigation';
 
@@ -189,7 +191,16 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
       linking={linking}
+      onReady={() => {
+        // Cold start from a tapped push notification: the tap was recorded
+        // before the navigator existed, so pick it up once it's ready.
+        const pendingChatId = consumePendingPushConversationId();
+        if (pendingChatId) {
+          navigateToChat(pendingChatId);
+        }
+      }}
       theme={{
         ...DefaultTheme,
         colors: {

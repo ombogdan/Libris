@@ -1,3 +1,10 @@
+# The project links pods statically (no USE_FRAMEWORKS by default below), and
+# react-native-firebase resolving the Firebase iOS SDK via SPM makes each
+# firebase pod embed its own copy of it, which collides at static link time.
+# Falling back to CocoaPods-sourced Firebase avoids that without switching
+# the whole project to dynamic frameworks.
+$RNFirebaseDisableSPM = true
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(

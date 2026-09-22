@@ -8,6 +8,7 @@
       "types/*": ["types/*"],
       "shared/*": ["shared/*"],
       "screens/*": ["screens/*"],
+      "navigation/*": ["navigation/*"],
       "core/*": ["shared/core/*"],
       "configs/*": ["shared/core/configs/*"],
       "services/*": ["shared/core/services/*"],

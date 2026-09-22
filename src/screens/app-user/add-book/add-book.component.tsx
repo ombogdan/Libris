@@ -7,7 +7,7 @@ import {
   translateLanguage,
 } from 'shared/localization/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Keyboard, Platform, Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -83,6 +83,7 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
   const [error, setError] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   // A city that came back with the draft was typed by the user; keep it.
   const cityEdited = useRef(Boolean(form.city));
 
@@ -91,6 +92,28 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
       saveListingDraft(userId, form);
     }
   }, [form, userId]);
+
+  // KeyboardAwareScrollView's own Android compensation isn't reliable here,
+  // so a spacer sized to the real keyboard height is added below the last
+  // field — that guarantees every field, including the publish button, can
+  // always be scrolled clear of the keyboard.
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    const show = Keyboard.addListener('keyboardDidShow', event =>
+      setKeyboardHeight(event.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardHeight(0),
+    );
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const set = <Key extends keyof AddBookForm>(
     key: Key,
@@ -310,6 +333,7 @@ export function AddBookScreen({ navigation }: AddBookScreenProps) {
           disabled={isPublishing}
           onPress={publish}
         />
+        <View style={{ height: keyboardHeight }} />
       </KeyboardAwareScrollView>
     </View>
   );

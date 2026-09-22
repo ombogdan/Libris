@@ -7,7 +7,7 @@ import {
   translateLanguage,
 } from 'shared/localization/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Keyboard, Platform, Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -58,6 +58,29 @@ export function EditListingScreen({
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // KeyboardAwareScrollView's own Android compensation isn't reliable here,
+  // so a spacer sized to the real keyboard height is added below the last
+  // field — that guarantees every field, including the save button, can
+  // always be scrolled clear of the keyboard.
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    const show = Keyboard.addListener('keyboardDidShow', event =>
+      setKeyboardHeight(event.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardHeight(0),
+    );
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!book || initializedBookId.current === book.id) {
@@ -321,6 +344,7 @@ export function EditListingScreen({
           disabled={isSaving}
           onPress={save}
         />
+        <View style={{ height: keyboardHeight }} />
       </KeyboardAwareScrollView>
     </View>
   );

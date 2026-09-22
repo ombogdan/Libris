@@ -15,6 +15,7 @@ const config = {
       types: fromRoot('src/types'),
       shared: fromRoot('src/shared'),
       screens: fromRoot('src/screens'),
+      navigation: fromRoot('src/navigation'),
       core: fromRoot('src/shared/core'),
       configs: fromRoot('src/shared/core/configs'),
       services: fromRoot('src/shared/core/services'),
