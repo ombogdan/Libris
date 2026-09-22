@@ -2,8 +2,8 @@ import { StyleSheet } from 'react-native';
 
 import { createStyles } from 'shared/theme/createStyles';
 
-export const useStyles = createStyles(({ theme, scale }: any) =>
-  StyleSheet.create({
+export const useStyles = createStyles(({ theme, scale }: any) => ({
+  ...StyleSheet.create({
     card: {
       padding: scale(14),
       borderRadius: scale(24),
@@ -69,5 +69,71 @@ export const useStyles = createStyles(({ theme, scale }: any) =>
       color: theme.palette.neutral600,
       fontSize: scale(11.5),
     },
+    replyCard: {
+      marginLeft: scale(20),
+      padding: scale(11),
+      borderRadius: scale(16),
+      borderLeftWidth: scale(3),
+      borderLeftColor: theme.palette.accent,
+      backgroundColor: theme.palette.accent100,
+      gap: scale(3),
+    },
+    replyLabel: {
+      color: theme.palette.accent700,
+      fontSize: scale(11),
+      fontWeight: '800',
+    },
+    replyText: {
+      color: theme.palette.text,
+      fontSize: scale(13),
+      lineHeight: scale(19),
+    },
+    replyActions: {
+      flexDirection: 'row',
+      gap: scale(14),
+    },
+    replyActionButton: {
+      minHeight: scale(30),
+      justifyContent: 'center',
+    },
+    replyActionText: {
+      color: theme.palette.accent700,
+      fontSize: scale(12),
+      fontWeight: '700',
+    },
+    removeReplyText: {
+      color: theme.palette.error,
+      fontSize: scale(12),
+      fontWeight: '700',
+    },
+    replyForm: {
+      gap: scale(8),
+    },
+    replyInput: {
+      minHeight: scale(72),
+      borderRadius: scale(14),
+      borderWidth: scale(1),
+      borderColor: theme.palette.divider,
+      backgroundColor: theme.palette.background,
+      paddingHorizontal: scale(12),
+      paddingVertical: scale(10),
+      color: theme.palette.text,
+      fontSize: scale(13),
+    },
+    replyFormActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: scale(16),
+    },
+    replySaveButton: {
+      paddingHorizontal: scale(4),
+    },
+    replySaveText: {
+      color: theme.palette.accent700,
+      fontSize: scale(12),
+      fontWeight: '800',
+    },
+    pressed: { opacity: 0.65 },
   }),
-);
+  colors: { placeholder: theme.palette.neutral500 },
+}));

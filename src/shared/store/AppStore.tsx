@@ -60,7 +60,11 @@ import {
   markChatConversationRead,
   sendChatMessage,
 } from 'services/chats';
-import { submitConversationReview } from 'services/reviews';
+import {
+  deleteReview as deleteReviewRequest,
+  submitConversationReview,
+  updateReview as updateReviewRequest,
+} from 'services/reviews';
 import {
   blockUser as blockUserRequest,
   fetchBlockedUserIds,
@@ -140,6 +144,12 @@ type Store = {
     rating: number,
     comment: string,
   ) => Promise<void>;
+  updateReview: (
+    chatId: string,
+    rating: number,
+    comment: string,
+  ) => Promise<void>;
+  deleteReview: (chatId: string) => Promise<void>;
   blockedUserIds: string[];
   blockedUsersLoading: boolean;
   reloadBlockedUsers: () => Promise<void>;
@@ -354,7 +364,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         archivedAt: row.archived_at,
         archiveReason: row.archive_reason,
         canReview: row.can_review,
+        myReviewId: row.my_review_id,
         myReviewRating: row.my_review_rating,
+        myReviewComment: row.my_review_comment,
         msgs: existing?.msgs ?? [],
         messagesLoaded: existing?.messagesLoaded ?? false,
         messagesLoading: existing?.messagesLoading ?? false,
@@ -780,6 +792,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         sellerAvatarUrl: sellerProfile?.avatar_url ?? null,
         status: row.status,
         createdAt: row.created_at,
+        viewCount: row.view_count,
       };
     },
     [],
@@ -1163,6 +1176,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
           price: book.price,
           status: book.status === 'sold' ? 'sold' : 'active',
           stats: t('myListings.published', { lng: locale }),
+          viewCount: book.viewCount ?? 0,
           tone: book.tone,
           imageUrls: book.imageUrls,
         })),
@@ -1453,11 +1467,66 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         throw new Error(t('reviews.ratingError'));
       }
 
-      await submitConversationReview(chatId, rating, comment);
+      const review = await submitConversationReview(chatId, rating, comment);
       updateChats(current =>
         current.map(item =>
           item.id === chatId
-            ? { ...item, canReview: false, myReviewRating: rating }
+            ? {
+                ...item,
+                canReview: false,
+                myReviewId: review.id,
+                myReviewRating: rating,
+                myReviewComment: comment.trim(),
+              }
+            : item,
+        ),
+      );
+      await Promise.all([reloadChats({ silent: true }), reloadBooks()]);
+    },
+    [reloadBooks, reloadChats, updateChats],
+  );
+
+  const updateReview = useCallback(
+    async (chatId: string, rating: number, comment: string) => {
+      const chat = chatsRef.current.find(item => item.id === chatId);
+      if (!chat?.myReviewId) {
+        throw new Error(t('store.reviewUnavailable'));
+      }
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        throw new Error(t('reviews.ratingError'));
+      }
+
+      await updateReviewRequest(chat.myReviewId, rating, comment);
+      updateChats(current =>
+        current.map(item =>
+          item.id === chatId
+            ? { ...item, myReviewRating: rating, myReviewComment: comment.trim() }
+            : item,
+        ),
+      );
+      await Promise.all([reloadChats({ silent: true }), reloadBooks()]);
+    },
+    [reloadBooks, reloadChats, updateChats],
+  );
+
+  const deleteReview = useCallback(
+    async (chatId: string) => {
+      const chat = chatsRef.current.find(item => item.id === chatId);
+      if (!chat?.myReviewId) {
+        throw new Error(t('store.reviewUnavailable'));
+      }
+
+      await deleteReviewRequest(chat.myReviewId);
+      updateChats(current =>
+        current.map(item =>
+          item.id === chatId
+            ? {
+                ...item,
+                canReview: true,
+                myReviewId: null,
+                myReviewRating: null,
+                myReviewComment: null,
+              }
             : item,
         ),
       );
@@ -1555,6 +1624,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     send,
     retryMessage,
     submitReview,
+    updateReview,
+    deleteReview,
     blockedUserIds,
     blockedUsersLoading,
     reloadBlockedUsers,

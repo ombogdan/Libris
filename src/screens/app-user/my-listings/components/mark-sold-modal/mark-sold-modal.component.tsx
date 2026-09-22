@@ -27,7 +27,9 @@ export function MarkSoldModal({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>{t('myListings.soldTo', { title: listingTitle })}</Text>
+          <Text numberOfLines={2} style={styles.title}>
+            {t('myListings.soldTo', { title: listingTitle })}
+          </Text>
           <Text style={styles.subtitle}>{t('myListings.soldHelp')}</Text>
           <ScrollView
             contentContainerStyle={styles.list}

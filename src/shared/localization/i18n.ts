@@ -161,7 +161,7 @@ export function translateLanguage(language: string) {
   return keys[language] ? t(keys[language]) : language;
 }
 
-type CountNoun = 'book' | 'listing' | 'review';
+type CountNoun = 'book' | 'listing' | 'review' | 'view';
 
 function ukrainianCountKey(count: number, noun: CountNoun) {
   const lastDigit = count % 10;
@@ -192,6 +192,7 @@ export const formatListingsCount = (count: number) =>
 export const formatReviewsCount = (count: number) =>
   countLabel(count, 'review');
 export const formatBooksCount = (count: number) => countLabel(count, 'book');
+export const formatViewsCount = (count: number) => countLabel(count, 'view');
 
 export const formatRating = (value: number) =>
   value.toLocaleString(getLocaleTag(), {

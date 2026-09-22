@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   RefreshControl,
   Text,
@@ -11,10 +12,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, ScreenHeader } from 'shared/components/ui';
+import { useAuth } from 'providers/auth/AuthProvider';
 import {
   fetchProfileReviewSummary,
   fetchUserReviews,
+  replyToReview,
 } from 'services/reviews';
+import { getFriendlyErrorMessage } from 'services/moderation';
+import { useAppStore } from 'store/AppStore';
 import { useTheme } from 'shared/theme';
 import { RatingSummary } from './components/rating-summary';
 import { ReviewItem } from './components/review-item';
@@ -31,14 +36,21 @@ export function UserReviewsScreen({
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
   const { theme } = useTheme();
+  const { session } = useAuth();
+  const store = useAppStore();
   const [reviews, setReviews] = useState<UserReviewListItem[]>([]);
   const [ratingAverage, setRatingAverage] = useState<number | null>(null);
   const [reviewsCount, setReviewsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const displayName = route.params.displayName?.trim() || t('common.user');
   const hasReviews = reviews.length > 0;
+  const canReply = Boolean(
+    session?.user.id && session.user.id === route.params.userId,
+  );
 
   const loadReviews = useCallback(
     async (refresh = false) => {
@@ -61,6 +73,8 @@ export function UserReviewsScreen({
             reviewerAvatarUrl: row.reviewer_avatar_url,
             rating: row.rating,
             comment: row.comment || null,
+            reply: row.reply,
+            replyCreatedAt: row.reply_created_at,
             listingTitle: row.listing_title,
             createdAt: row.created_at,
           })),
@@ -87,9 +101,63 @@ export function UserReviewsScreen({
     }, [loadReviews]),
   );
 
+  const submitReply = useCallback(
+    async (reviewId: string, text: string) => {
+      setIsSubmittingReply(true);
+      try {
+        const updated = await replyToReview(reviewId, text);
+        setReviews(current =>
+          current.map(item =>
+            item.id === reviewId
+              ? {
+                  ...item,
+                  reply: updated.reply,
+                  replyCreatedAt: updated.reply_created_at,
+                }
+              : item,
+          ),
+        );
+        setReplyingId(null);
+      } catch (replyError) {
+        store.notify(
+          getFriendlyErrorMessage(replyError, t('reviews.replyError')),
+        );
+      } finally {
+        setIsSubmittingReply(false);
+      }
+    },
+    [store],
+  );
+
+  const confirmRemoveReply = useCallback(
+    (reviewId: string) => {
+      Alert.alert(t('reviews.removeReplyConfirmTitle'), '', [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('reviews.removeReply'),
+          style: 'destructive',
+          onPress: () => void submitReply(reviewId, ''),
+        },
+      ]);
+    },
+    [submitReply],
+  );
+
   const renderReview = useCallback(
-    ({ item }: { item: UserReviewListItem }) => <ReviewItem review={item} />,
-    [],
+    ({ item }: { item: UserReviewListItem }) => (
+      <ReviewItem
+        review={item}
+        revieweeName={displayName}
+        canReply={canReply}
+        isReplying={replyingId === item.id}
+        isSubmittingReply={isSubmittingReply && replyingId === item.id}
+        onStartReply={() => setReplyingId(item.id)}
+        onCancelReply={() => setReplyingId(null)}
+        onSubmitReply={text => void submitReply(item.id, text)}
+        onRemoveReply={() => confirmRemoveReply(item.id)}
+      />
+    ),
+    [canReply, confirmRemoveReply, displayName, isSubmittingReply, replyingId, submitReply],
   );
 
   const renderEmpty = () => {

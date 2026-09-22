@@ -1,4 +1,4 @@
-import { t } from 'shared/localization/i18n';
+import { formatViewsCount, t } from 'shared/localization/i18n';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -41,7 +41,9 @@ export function ListingItem({
               </Text>
             </View>
           </View>
-          <Text style={styles.meta}>{ad.stats}</Text>
+          <Text style={styles.meta}>
+            {ad.stats} · {formatViewsCount(ad.viewCount)}
+          </Text>
         </View>
       </Pressable>
       <View style={styles.actions}>

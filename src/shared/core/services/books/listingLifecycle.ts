@@ -33,3 +33,15 @@ export async function softDeleteBookListing(listingId: string) {
     throw error;
   }
 }
+
+// Best-effort — a failed view count is never worth bothering the viewer
+// about, so callers can safely fire-and-forget this.
+export async function incrementListingView(listingId: string) {
+  const { error } = await supabase.rpc('increment_listing_view', {
+    p_listing_id: listingId,
+  });
+
+  if (error) {
+    throw error;
+  }
+}

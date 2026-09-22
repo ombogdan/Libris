@@ -298,23 +298,57 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         return;
       }
 
+      const isEditing = Boolean(chat?.myReviewId);
       setReviewSubmitting(true);
       setReviewError(null);
-      void app
-        .submitReview(activeChatId, review.rating, review.comment)
+      void (isEditing
+        ? app.updateReview(activeChatId, review.rating, review.comment)
+        : app.submitReview(activeChatId, review.rating, review.comment)
+      )
         .then(() => {
           setReviewVisible(false);
-          app.notify(t('reviews.published'));
+          app.notify(isEditing ? t('reviews.updated') : t('reviews.published'));
         })
         .catch(error => {
           setReviewError(
-            getFriendlyErrorMessage(error, t('reviews.publishError')),
+            getFriendlyErrorMessage(
+              error,
+              isEditing ? t('reviews.editError') : t('reviews.publishError'),
+            ),
           );
         })
         .finally(() => setReviewSubmitting(false));
     },
-    [activeChatId, app, reviewSubmitting],
+    [activeChatId, app, chat?.myReviewId, reviewSubmitting],
   );
+
+  const confirmDeleteReview = useCallback(() => {
+    if (!activeChatId) {
+      return;
+    }
+
+    Alert.alert(
+      t('reviews.deleteConfirmTitle'),
+      t('reviews.deleteConfirmText'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('reviews.delete'),
+          style: 'destructive',
+          onPress: () => {
+            void app
+              .deleteReview(activeChatId)
+              .then(() => app.notify(t('reviews.deleted')))
+              .catch(error =>
+                app.notify(
+                  getFriendlyErrorMessage(error, t('reviews.deleteError')),
+                ),
+              );
+          },
+        },
+      ],
+    );
+  }, [activeChatId, app]);
 
   const retryMessage = useCallback(
     (message: Message) => {
@@ -537,6 +571,11 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
           setReviewError(null);
           setReviewVisible(true);
         }}
+        onEditReview={() => {
+          setReviewError(null);
+          setReviewVisible(true);
+        }}
+        onDeleteReview={confirmDeleteReview}
       />
 
       <View style={styles.page} onLayout={handlePageLayout}>
@@ -669,6 +708,8 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
         recipientName={chat.name}
         isSubmitting={reviewSubmitting}
         error={reviewError}
+        initialRating={chat.myReviewRating as 1 | 2 | 3 | 4 | 5 | null}
+        initialComment={chat.myReviewComment ?? ''}
         onClose={() => {
           setReviewVisible(false);
           setReviewError(null);

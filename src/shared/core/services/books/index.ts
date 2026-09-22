@@ -5,6 +5,7 @@ export {
 } from './bookImages';
 export type { LocalBookImage } from './bookImages';
 export {
+  incrementListingView,
   markBookListingSold,
   reactivateBookListing,
   softDeleteBookListing,

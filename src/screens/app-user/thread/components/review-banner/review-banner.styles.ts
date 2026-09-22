@@ -62,6 +62,32 @@ export const useStyles = createStyles(({ theme, scale }: any) =>
       fontSize: scale(12),
       fontWeight: '800',
     },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: scale(8),
+      marginTop: scale(5),
+    },
+    actionSecondary: {
+      marginTop: 0,
+      backgroundColor: 'transparent',
+      borderWidth: scale(1),
+      borderColor: theme.palette.accent,
+    },
+    actionSecondaryText: {
+      color: theme.palette.accent700,
+    },
+    deleteAction: {
+      alignSelf: 'flex-start',
+      minHeight: scale(36),
+      paddingHorizontal: scale(14),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    deleteActionText: {
+      color: theme.palette.error,
+      fontSize: scale(12),
+      fontWeight: '800',
+    },
     pressed: {
       opacity: 0.72,
     },

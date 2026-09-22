@@ -4,6 +4,8 @@ export type UserReviewListItem = {
   reviewerAvatarUrl: string | null;
   rating: number;
   comment: string | null;
+  reply: string | null;
+  replyCreatedAt: string | null;
   listingTitle: string;
   createdAt: string;
 };

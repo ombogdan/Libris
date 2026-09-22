@@ -120,6 +120,8 @@ export function BookImagesPicker({
               </View>
             ) : null}
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('images.remove')}
               hitSlop={styles.hitSlop}
               onPress={() =>
                 onChange(images.filter(item => item.uri !== image.uri))

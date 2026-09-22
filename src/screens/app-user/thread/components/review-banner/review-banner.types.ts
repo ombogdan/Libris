@@ -6,4 +6,6 @@ export type ReviewBannerProps = {
   canReview: boolean;
   submittedRating?: number | null;
   onLeaveReview?: () => void;
+  onEditReview?: () => void;
+  onDeleteReview?: () => void;
 };

@@ -1,9 +1,16 @@
 import { t } from 'shared/localization/i18n';
 import React, { useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Empty, ScreenHeader } from 'shared/components/ui';
+import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { ListingItem } from './components/listing-item';
 import { MarkSoldModal } from './components/mark-sold-modal';
@@ -13,6 +20,7 @@ import type { MyListingsScreenProps } from './my-listings.types';
 export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
   const insets = useSafeAreaInsets();
   const store = useAppStore();
+  const { theme } = useTheme();
   const styles = useStyles({ bottomInset: insets.bottom });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sellingBookId, setSellingBookId] = useState<string | null>(null);
@@ -91,8 +99,27 @@ export function MyListingsScreen({ navigation }: MyListingsScreenProps) {
       <ScrollView
         contentContainerStyle={styles.page}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={store.booksLoading}
+            onRefresh={() => void store.reloadBooks()}
+          />
+        }
       >
-        {store.ads.length ? (
+        {store.booksLoading && !store.ads.length ? (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color={theme.palette.accent} />
+          </View>
+        ) : store.booksError && !store.ads.length ? (
+          <>
+            <Empty text={t('myListings.loadError')} />
+            <Button
+              secondary
+              label={t('common.retry')}
+              onPress={() => void store.reloadBooks()}
+            />
+          </>
+        ) : store.ads.length ? (
           store.ads.map(ad => (
             <ListingItem
               key={ad.id}

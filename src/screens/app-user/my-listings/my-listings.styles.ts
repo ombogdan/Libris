@@ -16,5 +16,8 @@ export const useStyles = createStyles(
         gap: scale(13),
         backgroundColor: theme.palette.background,
       },
+      loading: {
+        paddingVertical: scale(48),
+      },
     }),
 );

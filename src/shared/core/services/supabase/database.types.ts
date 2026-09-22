@@ -37,6 +37,7 @@ export type BookListing = {
   deleted_at: string | null;
   sold_at: string | null;
   sold_conversation_id: string | null;
+  view_count: number;
   created_at: string;
   updated_at: string;
 };
@@ -155,7 +156,9 @@ export type ChatConversationSummary = {
   archived_at: string | null;
   archive_reason: 'sold' | 'deleted' | 'hidden' | null;
   can_review: boolean;
+  my_review_id: string | null;
   my_review_rating: number | null;
+  my_review_comment: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -177,6 +180,8 @@ export type Review = {
   reviewee_id: string;
   rating: number;
   comment: string;
+  reply: string | null;
+  reply_created_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -233,6 +238,8 @@ export type UserReviewDetail = {
   reviewee_id: string;
   rating: number;
   comment: string;
+  reply: string | null;
+  reply_created_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -287,12 +294,14 @@ export type Database = {
           | 'deleted_at'
           | 'sold_at'
           | 'sold_conversation_id'
+          | 'view_count'
         > & {
           id?: string;
           is_deleted?: boolean;
           deleted_at?: string | null;
           sold_at?: string | null;
           sold_conversation_id?: string | null;
+          view_count?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -472,6 +481,22 @@ export type Database = {
           p_comment?: string;
         };
         Returns: Review;
+      };
+      update_review: {
+        Args: { p_review_id: string; p_rating: number; p_comment?: string };
+        Returns: Review;
+      };
+      delete_review: {
+        Args: { p_review_id: string };
+        Returns: undefined;
+      };
+      reply_to_review: {
+        Args: { p_review_id: string; p_reply: string | null };
+        Returns: Review;
+      };
+      increment_listing_view: {
+        Args: { p_listing_id: string };
+        Returns: undefined;
       };
       claim_listing_purge_batch: {
         Args: { p_limit?: number };

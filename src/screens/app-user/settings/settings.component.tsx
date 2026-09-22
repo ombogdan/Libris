@@ -37,6 +37,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isSavingNotifyMessages, setIsSavingNotifyMessages] = useState(false);
+  const [isSavingNotifyReviews, setIsSavingNotifyReviews] = useState(false);
 
   const name =
     profile?.display_name.trim() ||
@@ -59,6 +60,17 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       store.notify(t('settings.notifications.saveError'));
     } finally {
       setIsSavingNotifyMessages(false);
+    }
+  };
+
+  const toggleNotifyReviews = async (value: boolean) => {
+    setIsSavingNotifyReviews(true);
+    try {
+      await updateProfile({ notify_reviews: value });
+    } catch {
+      store.notify(t('settings.notifications.saveError'));
+    } finally {
+      setIsSavingNotifyReviews(false);
     }
   };
 
@@ -127,16 +139,31 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           ))}
         </SettingsSection>
 
-        <SettingsSection title={t('settings.notifications.title')}>
+        <SettingsSection
+          title={t('settings.notifications.title')}
+          footnote={t('settings.notifications.footnote')}
+        >
           <ListRow
             label={t('settings.notifications.messages')}
             showChevron={false}
-            isLast
             accessory={
               <Switch
                 value={profile?.notify_messages ?? true}
                 onValueChange={value => void toggleNotifyMessages(value)}
                 disabled={isSavingNotifyMessages}
+                trackColor={{ true: styles.colors.accent }}
+              />
+            }
+          />
+          <ListRow
+            label={t('settings.notifications.reviews')}
+            showChevron={false}
+            isLast
+            accessory={
+              <Switch
+                value={profile?.notify_reviews ?? true}
+                onValueChange={value => void toggleNotifyReviews(value)}
+                disabled={isSavingNotifyReviews}
                 trackColor={{ true: styles.colors.accent }}
               />
             }

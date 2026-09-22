@@ -30,7 +30,7 @@ import { ListRow } from 'shared/components/list-row';
 import { ReportModal, useReportFlow } from 'shared/components/report-modal';
 import { useAuth } from 'providers/auth/AuthProvider';
 import { publicLinks } from 'configs/publicLinks';
-import { fetchPublicBookListing } from 'services/books';
+import { fetchPublicBookListing, incrementListingView } from 'services/books';
 import type { Book } from 'shared/data';
 import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
@@ -78,6 +78,12 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
   useEffect(() => {
     void loadLinkedBook();
   }, [loadLinkedBook]);
+
+  useEffect(() => {
+    if (book?.id && !isOwnListing) {
+      void incrementListingView(book.id).catch(() => undefined);
+    }
+  }, [book?.id, isOwnListing]);
 
   const shareBook = async () => {
     if (!book) {
@@ -244,7 +250,7 @@ export function BookScreen({ navigation, route }: BookScreenProps) {
             color={styles.colors.sellerArrow}
           />
         </Pressable>
-        {!isOwnListing ? <SafetyTip /> : null}
+        {!isOwnListing ? <SafetyTip city={book.city} /> : null}
         <Button
           label={
             isOwnListing

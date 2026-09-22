@@ -22,6 +22,7 @@ export type Book = {
   status?: 'active' | 'sold' | 'hidden';
   createdAt?: string;
   distanceKm?: number | null;
+  viewCount?: number;
 };
 export const books: Book[] = [
   {
@@ -145,7 +146,9 @@ export type Chat = {
   archivedAt: string | null;
   archiveReason: 'sold' | 'deleted' | 'hidden' | null;
   canReview: boolean;
+  myReviewId: string | null;
   myReviewRating: number | null;
+  myReviewComment: string | null;
   msgs: Message[];
   messagesLoaded: boolean;
   messagesLoading: boolean;
@@ -160,6 +163,7 @@ export type Ad = {
   price: number;
   status: 'active' | 'sold';
   stats: string;
+  viewCount: number;
   tone: 'accent' | 'accent2' | 'neutral';
   imageUrls?: string[];
 };

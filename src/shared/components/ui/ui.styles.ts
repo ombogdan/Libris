@@ -171,10 +171,10 @@ export const useStyles = createStyles(({ theme, scale }: any) => {
         justifyContent: 'center',
       },
       h2: {
-        fontSize: scale(30),
-        lineHeight: scale(34),
+        fontSize: scale(26),
+        lineHeight: scale(30),
         fontWeight: '800',
-        letterSpacing: scale(-0.8),
+        letterSpacing: scale(-0.6),
         color: theme.palette.text,
       },
       empty: {

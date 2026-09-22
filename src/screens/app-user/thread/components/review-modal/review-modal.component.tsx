@@ -22,21 +22,26 @@ export function ReviewModal({
   recipientName,
   isSubmitting = false,
   error = null,
+  initialRating = null,
+  initialComment = '',
   onClose,
   onSubmit,
 }: ReviewModalProps) {
   const insets = useSafeAreaInsets();
   const styles = useStyles({ bottomInset: insets.bottom });
-  const [rating, setRating] = useState<ReviewRating | null>(null);
-  const [comment, setComment] = useState('');
+  const isEditing = initialRating !== null;
+  const [rating, setRating] = useState<ReviewRating | null>(initialRating);
+  const [comment, setComment] = useState(initialComment);
   const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     if (visible) {
-      setRating(null);
-      setComment('');
+      setRating(initialRating);
+      setComment(initialComment);
       setValidationError('');
     }
+    // Only reset when the modal opens, not on every keystroke elsewhere.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const submit = () => {
@@ -61,7 +66,9 @@ export function ReviewModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>{t('reviews.leave')}</Text>
+          <Text style={styles.title}>
+            {isEditing ? t('reviews.editTitle') : t('reviews.leave')}
+          </Text>
           <Text style={styles.subtitle}>
             {t('reviews.experience', { name: recipientName || t('common.userInContext') })}
           </Text>
@@ -117,7 +124,13 @@ export function ReviewModal({
           ) : null}
 
           <Button
-            label={isSubmitting ? t('reviews.publishing') : t('reviews.leave')}
+            label={
+              isSubmitting
+                ? t('common.saving')
+                : isEditing
+                ? t('common.save')
+                : t('reviews.leave')
+            }
             disabled={isSubmitting}
             onPress={submit}
           />

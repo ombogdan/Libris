@@ -31,7 +31,7 @@ import { publicLinks } from 'configs/publicLinks';
 import { useTheme } from 'shared/theme';
 import { useAppStore } from 'store/AppStore';
 import { ReviewItem } from '../user-reviews/components/review-item';
-import type { UserReviewListItem } from '../user-reviews/user-reviews.types';
+import type { UserReviewListItem } from 'screens/app-user/user-reviews';
 import { useStyles } from './user-profile.styles';
 import type { UserProfileScreenProps } from './user-profile.types';
 
@@ -44,6 +44,8 @@ function toReview(row: UserReviewDetail): UserReviewListItem {
     reviewerAvatarUrl: row.reviewer_avatar_url,
     rating: row.rating,
     comment: row.comment || null,
+    reply: row.reply,
+    replyCreatedAt: row.reply_created_at,
     listingTitle: row.listing_title,
     createdAt: row.created_at,
   };
@@ -363,7 +365,18 @@ export function UserProfileScreen({
             {reviews.length ? (
               <View style={styles.reviews}>
                 {reviews.map(review => (
-                  <ReviewItem key={review.id} review={review} />
+                  <ReviewItem
+                    key={review.id}
+                    review={review}
+                    revieweeName={displayName}
+                    canReply={false}
+                    isReplying={false}
+                    isSubmittingReply={false}
+                    onStartReply={openReviews}
+                    onCancelReply={() => undefined}
+                    onSubmitReply={() => undefined}
+                    onRemoveReply={() => undefined}
+                  />
                 ))}
               </View>
             ) : (

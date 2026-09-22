@@ -14,6 +14,8 @@ export function ReviewBanner({
   canReview,
   submittedRating,
   onLeaveReview,
+  onEditReview,
+  onDeleteReview,
 }: ReviewBannerProps) {
   const styles = useStyles();
 
@@ -40,6 +42,41 @@ export function ReviewBanner({
         <View style={styles.content}>
           <Text style={styles.title}>{t('reviews.left')}</Text>
           <Text style={styles.rating}>{ratingStars(submittedRating)}</Text>
+          {onEditReview || onDeleteReview ? (
+            <View style={styles.actionsRow}>
+              {onEditReview ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('reviews.edit')}
+                  onPress={onEditReview}
+                  style={({ pressed }) => [
+                    styles.action,
+                    styles.actionSecondary,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={[styles.actionText, styles.actionSecondaryText]}>
+                    {t('reviews.edit')}
+                  </Text>
+                </Pressable>
+              ) : null}
+              {onDeleteReview ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('reviews.delete')}
+                  onPress={onDeleteReview}
+                  style={({ pressed }) => [
+                    styles.deleteAction,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.deleteActionText}>
+                    {t('reviews.delete')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     );

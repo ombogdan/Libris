@@ -68,6 +68,8 @@ export function Chip({
   const styles = useStyles();
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       onPress={onPress}
       style={[styles.chip, active && styles.chipActive]}
     >
@@ -179,6 +181,10 @@ export function BookRow({
         </View>
       </View>
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          favorite ? t('favorites.saved') : t('favorites.add')
+        }
         hitSlop={styles.hitSlop}
         onPress={onHeart}
         style={styles.heart}
@@ -227,6 +233,8 @@ export function ScreenHeader({
       <View style={styles.screenHeaderRow}>
         {onBack ? (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
             hitSlop={styles.hitSlop}
             onPress={onBack}
             style={styles.screenHeaderBack}
