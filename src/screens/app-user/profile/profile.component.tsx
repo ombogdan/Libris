@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from 'providers/auth/AuthProvider';
+import { usePendingReviews } from 'hooks/usePendingReviews';
 import { ListRow } from 'shared/components/list-row';
 import {
   ProfileEditModal,
@@ -23,6 +24,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const app = useAppStore();
   const { session, profile, profileError, refreshProfile } = useAuth();
   const editor = useProfileEditor();
+  const { pendingChats, unseenCount } = usePendingReviews();
 
   const name =
     profile?.display_name.trim() ||
@@ -109,6 +111,19 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
               }
             }}
           />
+          {pendingChats.length ? (
+            <ListRow
+              label={t('pendingReviews.title')}
+              onPress={() => navigation.getParent()?.navigate('PendingReviews')}
+              accessory={
+                unseenCount ? (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{unseenCount}</Text>
+                  </View>
+                ) : null
+              }
+            />
+          ) : null}
           <ListRow
             label={t('profile.city')}
             value={city}

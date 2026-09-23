@@ -60,5 +60,19 @@ export const useStyles = createStyles(
         lineHeight: scale(18),
         color: theme.palette.error,
       },
+      badge: {
+        minWidth: scale(22),
+        height: scale(22),
+        borderRadius: scale(99),
+        paddingHorizontal: scale(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.palette.error,
+      },
+      badgeText: {
+        color: theme.palette.white,
+        fontSize: scale(11),
+        fontWeight: '800',
+      },
     }),
 );

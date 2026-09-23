@@ -282,6 +282,12 @@ export default {
     removeReply: 'Remove reply',
     removeReplyConfirmTitle: 'Remove this reply?',
   },
+  pendingReviews: {
+    title: 'Leave a review',
+    subtitle: 'Rate the deals that are already done.',
+    empty: 'No deals waiting for a review yet.',
+    leave: 'Leave a review',
+  },
   userProfile: {
     title: 'Profile',
     loading: 'Loading profile…',

@@ -85,6 +85,7 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const autoOpenedReview = useRef(false);
   const report = useReportFlow({ reportedUserId: chat?.otherUserId });
 
   const lastMessageId = chat?.msgs.at(-1)?.id;
@@ -94,7 +95,22 @@ export function ThreadScreen({ navigation, route }: ThreadScreenProps) {
   useEffect(() => {
     didInitialScroll.current = false;
     nearBottom.current = true;
+    autoOpenedReview.current = false;
   }, [chatId]);
+
+  // Opened from the "pending reviews" shortcut — skip straight to the
+  // review modal instead of making the user find the button themselves.
+  useEffect(() => {
+    if (
+      route.params.openReview &&
+      chat?.canReview &&
+      !autoOpenedReview.current
+    ) {
+      autoOpenedReview.current = true;
+      setReviewError(null);
+      setReviewVisible(true);
+    }
+  }, [chat?.canReview, route.params.openReview]);
 
   useFocusEffect(
     useCallback(() => {

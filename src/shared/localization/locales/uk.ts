@@ -283,6 +283,12 @@ export default {
     removeReply: 'Прибрати відповідь',
     removeReplyConfirmTitle: 'Прибрати відповідь?',
   },
+  pendingReviews: {
+    title: 'Залишити відгук',
+    subtitle: 'Оціни угоди, які вже завершились.',
+    empty: 'Поки немає угод, які чекають на відгук.',
+    leave: 'Залишити відгук',
+  },
   userProfile: {
     title: 'Профіль',
     loading: 'Завантажуємо профіль…',

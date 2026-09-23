@@ -6,12 +6,13 @@ export type RootStackParamList = {
   CompleteProfile: undefined;
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Book: { bookId: string };
-  Thread: { chatId: string };
+  Thread: { chatId: string; openReview?: boolean };
   MyListings: undefined;
   EditListing: { bookId: string };
   UserReviews: { userId: string; displayName?: string };
   UserProfile: { userId: string; displayName?: string };
   BlockedUsers: undefined;
+  PendingReviews: undefined;
   Settings: undefined;
 };
 export type TabParamList = {

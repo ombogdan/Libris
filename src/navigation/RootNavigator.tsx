@@ -24,6 +24,7 @@ import {
   FavoritesScreen,
   FeedScreen,
   MyListingsScreen,
+  PendingReviewsScreen,
   ProfileScreen,
   SettingsScreen,
   SignupScreen,
@@ -241,6 +242,10 @@ export function RootNavigator() {
             <Stack.Screen name="Book" component={BookScreen} />
             <Stack.Screen name="Thread" component={ThreadScreen} />
             <Stack.Screen name="MyListings" component={MyListingsScreen} />
+            <Stack.Screen
+              name="PendingReviews"
+              component={PendingReviewsScreen}
+            />
             <Stack.Screen name="EditListing" component={EditListingScreen} />
             <Stack.Screen name="UserReviews" component={UserReviewsScreen} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />
